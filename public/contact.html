@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Contact Stellar Realty — Reach out to Hyderabad's most trusted real estate team. Buy, sell or rent with expert guidance.">
+  <title>Contact Us — Stellar Realty</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/chat.css">
+  <style>
+    @media (max-width: 768px) {
+      .contact-hero-grid { grid-template-columns: 1fr !important; gap: 2.5rem !important; }
+    }
+  </style>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏛</text></svg>">
+</head>
+<body>
+
+<!-- ── Navigation ── -->
+<nav class="nav">
+  <div class="container nav-inner">
+    <a href="index.html" class="nav-logo">Stellar<span>.</span>Realty</a>
+    <ul class="nav-links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="listings.html">Listings</a></li>
+      <li><a href="about.html">About</a></li>
+      <li><a href="contact.html" class="active">Contact</a></li>
+    </ul>
+    <a href="contact.html" class="btn btn-gold nav-cta">Enquire Now</a>
+    <button class="nav-hamburger" aria-label="Open menu">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</nav>
+
+<!-- ── Page Hero ── -->
+<section style="padding:9rem 0 6rem;background:var(--bg-base);position:relative;overflow:hidden;border-bottom:1px solid var(--border)">
+  <div style="position:absolute;inset:0;background-image:linear-gradient(rgba(201,169,110,0.04) 1px,transparent 1px),linear-gradient(90deg,rgba(201,169,110,0.04) 1px,transparent 1px);background-size:60px 60px;pointer-events:none"></div>
+  <div class="container" style="position:relative;z-index:1">
+    <div class="contact-hero-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:5rem;align-items:center">
+
+      <!-- Left: Hero Text -->
+      <div>
+        <div class="label page-enter">
+          <span class="accent-line"></span>We're Here to Help
+        </div>
+        <h1 class="page-enter" style="animation-delay:0.1s;margin-top:0.75rem">
+          Let's Find Your<br>
+          <em style="color:var(--gold);font-style:italic">Dream Home</em> Together
+        </h1>
+        <p class="page-enter" style="animation-delay:0.2s;font-size:1.05rem;max-width:440px;margin-top:1rem;color:var(--text-secondary)">
+          Whether you're buying, selling, or just exploring — our team is ready to guide you. We respond within 24 hours.
+        </p>
+      </div>
+
+      <!-- Right: Email Form -->
+      <div class="page-enter" style="animation-delay:0.2s">
+        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:2.5rem">
+          <h4 style="font-family:var(--font-body);font-size:1rem;font-weight:500;margin-bottom:1.75rem;color:var(--text-primary)">Send us a message</h4>
+          <form id="contact-form" class="contact-form" novalidate>
+            <div class="grid-2" style="gap:1rem">
+              <div class="form-group">
+                <label class="form-label" for="name">Full Name *</label>
+                <input class="form-input" type="text" id="name" name="name" placeholder="Your name" required>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="phone">Phone</label>
+                <input class="form-input" type="tel" id="phone" name="phone" placeholder="+91 99999 99999">
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="email">Email Address *</label>
+              <input class="form-input" type="email" id="email" name="email" placeholder="you@example.com" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="message">Your Message *</label>
+              <textarea class="form-textarea" id="message" name="message" placeholder="Tell us your requirements — preferred locality, budget, BHK, timeline…" required></textarea>
+            </div>
+            <button type="submit" class="btn btn-gold submit-btn" style="width:100%;justify-content:center;padding:1rem">
+              <span class="btn-text">Send Message ✦</span>
+              <span class="btn-loader" style="display:none">Sending…</span>
+            </button>
+          </form>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════
+     TRUSTED PARTNERS SECTION
+     Paste this block just ABOVE the <footer> tag in:
+       index.html, listings.html, property.html, contact.html
+     ═══════════════════════════════════════════════════════════ -->
+
+<section class="partners-section">
+  <div class="partners-inner">
+ 
+    <div class="partners-header">
+      <span class="partners-line"></span>
+      <span class="partners-label">Trusted Builder Partners</span>
+      <span class="partners-line"></span>
+    </div>
+    <p class="partners-sub">We exclusively represent Hyderabad's most trusted developers</p>
+ 
+    <div class="partners-marquee-wrap" aria-label="Partner logos">
+      <div class="partners-track">
+ 
+        <!-- SET 1 -->
+        <!-- dark card, logo has dark bg -->
+        <div class="partner-logo-card dark-card">
+          <img src="images/partners/vamsiram.svg" alt="Vamsiram Builders" loading="lazy">
+        </div>
+        <!-- dark card, vasavi text is white -->
+        <div class="partner-logo-card dark-card">
+          <img src="images/partners/vasavi.svg" alt="Vasavi Group" loading="lazy">
+        </div>
+        <!-- white card, ramky has white bg -->
+        <div class="partner-logo-card white-card">
+          <img src="images/partners/ramky.png" alt="Ramky Group" loading="lazy">
+        </div>
+        <!-- dark card, prestige has black/gold colors -->
+        <div class="partner-logo-card white-card">
+          <img src="images/partners/prestige.svg" alt="Prestige Group" loading="lazy">
+        </div>
+        <!-- white card, godrej has white bg rect -->
+        <div class="partner-logo-card white-card">
+          <img src="images/partners/godrej.svg" alt="Godrej Properties" loading="lazy">
+        </div>
+        <!-- dark card, brigade has dark bg -->
+        <div class="partner-logo-card dark-card">
+          <img src="images/partners/brigade.png" alt="Brigade Group" loading="lazy">
+        </div>
+        <!-- dark card, aparna is fine on dark -->
+        <div class="partner-logo-card dark-card">
+          <img src="images/partners/aparna.svg" alt="Aparna Constructions" loading="lazy">
+        </div>
+        <!-- white card, rajpushpa has white bg -->
+        <div class="partner-logo-card white-card">
+          <img src="images/partners/rajpushpa.png" alt="Rajpushpa Properties" loading="lazy">
+        </div>
+        <!-- dark card, arka has dark bg -->
+        <div class="partner-logo-card dark-card">
+          <img src="images/partners/arka.png" alt="Arka / Team4" loading="lazy">
+        </div>
+        <!-- dark card, dlf text is white -->
+        <div class="partner-logo-card dark-card">
+          <img src="images/partners/dlf.svg" alt="DLF" loading="lazy">
+        </div>
+        <!-- dark card, casagrand has dark bg -->
+        <div class="partner-logo-card dark-card">
+          <img src="images/partners/casagrand.png" alt="Casagrand" loading="lazy">
+        </div>
+        <!-- dark card, lodha text is white -->
+        <div class="partner-logo-card dark-card">
+          <img src="images/partners/lodha.svg" alt="Lodha" loading="lazy">
+        </div>
+        <!-- dark card, asbl is fine on dark -->
+        <div class="partner-logo-card dark-card">
+          <img src="images/partners/asbl.svg" alt="ASBL" loading="lazy">
+        </div>
+        <!-- dark card, myhome has dark bg -->
+        <div class="partner-logo-card white-card">
+          <img src="images/partners/myhome.png" alt="My Home Group" loading="lazy">
+        </div>
+ 
+        <!-- SET 2 — duplicate for seamless loop -->
+        <div class="partner-logo-card dark-card" aria-hidden="true"><img src="images/partners/vamsiram.svg" alt="" loading="lazy"></div>
+        <div class="partner-logo-card dark-card" aria-hidden="true"><img src="images/partners/vasavi.svg" alt="" loading="lazy"></div>
+        <div class="partner-logo-card white-card" aria-hidden="true"><img src="images/partners/ramky.png" alt="" loading="lazy"></div>
+        <div class="partner-logo-card dark-card" aria-hidden="true"><img src="images/partners/prestige.svg" alt="" loading="lazy"></div>
+        <div class="partner-logo-card white-card" aria-hidden="true"><img src="images/partners/godrej.svg" alt="" loading="lazy"></div>
+        <div class="partner-logo-card dark-card" aria-hidden="true"><img src="images/partners/brigade.png" alt="" loading="lazy"></div>
+        <div class="partner-logo-card dark-card" aria-hidden="true"><img src="images/partners/aparna.svg" alt="" loading="lazy"></div>
+        <div class="partner-logo-card white-card" aria-hidden="true"><img src="images/partners/rajpushpa.png" alt="" loading="lazy"></div>
+        <div class="partner-logo-card dark-card" aria-hidden="true"><img src="images/partners/arka.png" alt="" loading="lazy"></div>
+        <div class="partner-logo-card dark-card" aria-hidden="true"><img src="images/partners/dlf.svg" alt="" loading="lazy"></div>
+        <div class="partner-logo-card dark-card" aria-hidden="true"><img src="images/partners/casagrand.png" alt="" loading="lazy"></div>
+        <div class="partner-logo-card dark-card" aria-hidden="true"><img src="images/partners/lodha.svg" alt="" loading="lazy"></div>
+        <div class="partner-logo-card dark-card" aria-hidden="true"><img src="images/partners/asbl.svg" alt="" loading="lazy"></div>
+        <div class="partner-logo-card dark-card" aria-hidden="true"><img src="images/partners/myhome.png" alt="" loading="lazy"></div>
+ 
+      </div>
+    </div>
+ 
+  </div>
+</section>
+
+
+
+<!-- ── Footer ── -->
+<footer class="footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <div style="font-family:var(--font-display);font-size:1.5rem">Stellar<span style="color:var(--gold)">.</span>Realty</div>
+        <p>AI-powered real estate advisory for premium apartments, villas, and investment opportunities in Hyderabad.</p>
+        <div class="flex gap-2 mt-3">
+          <a href="#" class="btn btn-outline" style="padding:0.5rem 0.9rem;font-size:0.78rem">Instagram</a>
+          <a href="#" class="btn btn-outline" style="padding:0.5rem 0.9rem;font-size:0.78rem">LinkedIn</a>
+          <a href="#" class="btn btn-outline" style="padding:0.5rem 0.9rem;font-size:0.78rem">YouTube</a>
+        </div>
+      </div>
+      <div class="footer-col">
+        <h5>Properties</h5>
+        <a href="listings.html">All Listings</a>
+        <a href="listings.html?status=sale">For Sale</a>
+        <a href="listings.html?status=underconstruction">Under Construction</a>
+        <a href="listings.html?badge=new">New Launches</a>
+      </div>
+      <div class="footer-col">
+        <h5>Contact</h5>
+        <a href="tel:+917981343485">+91 79813 43485</a>
+        <a href="mailto:Hello@stellarrealty.in" 
+          onclick="if(!/Mobi|Android/i.test(navigator.userAgent)){ window.open('https://mail.google.com/mail/?view=cm&to=Hello@stellarrealty.co.in','_blank'); return false; }">
+          Hello@stellarrealty.co.in
+        </a>
+        <a href="contact.html">Send a Message</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2026 Stellar Realty. All rights reserved.</span>
+    </div>
+  </div>
+</footer>
+
+<!-- ── Firebase Phone Auth SDK (loaded before main.js) ── -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="js/firebase-otp.js"></script>
+<script src="js/main.js"></script>
+<script src="js/lead-trigger.js"></script>
+</body>
+</html>

@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Browse all properties for sale and rent in Hyderabad — Banjara Hills, Jubilee Hills, Gachibowli, Kondapur and more.">
+  <title>All Listings — Stellar Realty</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏛</text></svg>">
+  <style>
+    /* ── Shimmer skeleton animation ── */
+    @keyframes shimmer {
+      0%   { opacity: 1; }
+      50%  { opacity: 0.55; }
+      100% { opacity: 1; }
+    }
+
+    /* ── Pagination ── */
+    .page-btn {
+      min-width: 38px;
+      height: 38px;
+      padding: 0 0.75rem;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text-secondary);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: background 0.2s, border-color 0.2s, color 0.2s;
+    }
+    .page-btn:hover:not(.disabled):not(.active) {
+      background: rgba(201, 169, 110, 0.08);
+      border-color: rgba(201, 169, 110, 0.3);
+      color: var(--text-primary);
+    }
+    .page-btn.active {
+      background: #c9a96e;
+      border-color: #c9a96e;
+      color: #0d0d0e;
+      font-weight: 600;
+      cursor: default;
+    }
+    .page-btn.disabled {
+      opacity: 0.35;
+      cursor: default;
+    }
+    .page-ellipsis {
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      padding: 0 0.25rem;
+      line-height: 38px;
+    }
+
+    /* ── Amenities in card ── */
+    .card-amenities {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.35rem;
+      margin-top: 0.65rem;
+    }
+    .amenity-tag {
+      font-size: 0.7rem;
+      padding: 0.25rem 0.55rem;
+      background: rgba(201, 169, 110, 0.08);
+      border: 1px solid rgba(201, 169, 110, 0.2);
+      border-radius: 4px;
+      color: var(--text-secondary);
+      white-space: nowrap;
+    }
+
+    /* ── Remove pointer cursor from cards ── */
+    .property-card {
+      cursor: default;
+    }
+
+    /* ── Wishlist heart button ── */
+    .wishlist-heart {
+      position: absolute;
+      top: 0.65rem;
+      right: 0.65rem;
+      z-index: 10;
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      background: rgba(13,13,14,0.72);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      border: 1px solid rgba(255,255,255,0.1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      color: rgba(255,255,255,0.7);
+      transition: background 0.2s, transform 0.18s, border-color 0.2s;
+    }
+    .wishlist-heart:hover {
+      background: rgba(201,169,110,0.15);
+      border-color: rgba(201,169,110,0.4);
+      transform: scale(1.12);
+      color: #c9a96e;
+    }
+    .wishlist-heart.saved {
+      background: rgba(201,169,110,0.18);
+      border-color: rgba(201,169,110,0.5);
+      color: #c9a96e;
+    }
+    .wishlist-heart.saved svg {
+      animation: heartPop 0.3s cubic-bezier(0.34,1.56,0.64,1);
+    }
+    @keyframes heartPop {
+      0%   { transform: scale(0.7); }
+      60%  { transform: scale(1.25); }
+      100% { transform: scale(1); }
+    }
+
+    /* ── Wishlist tab pill ── */
+    .wishlist-tab .wl-count:empty { display: none; }
+    .tag[data-badge="wishlist"].active {
+      background: rgba(201,169,110,0.12);
+      border-color: rgba(201,169,110,0.45);
+      color: #c9a96e;
+    }
+
+    /* ── Custom locality dropdown ── */
+    .loc-wrap {
+      position: relative;
+      min-width: 160px;
+      width: auto;
+      flex-shrink: 0;
+      user-select: none;
+    }
+    .loc-trigger {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
+      width: 100%;
+      height: 100%;
+      padding: 0.72rem 0.9rem;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm, 8px);
+      color: var(--text-primary);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.875rem;
+      cursor: pointer;
+      transition: border-color 0.2s, color 0.2s;
+      white-space: nowrap;
+    }
+    .loc-trigger:hover,
+    .loc-wrap.open .loc-trigger {
+      border-color: rgba(201,169,110,0.45);
+    }
+    .loc-trigger svg {
+      flex-shrink: 0;
+      transition: transform 0.2s;
+      color: var(--text-muted);
+    }
+    .loc-wrap.open .loc-trigger svg { transform: rotate(180deg); }
+    .loc-trigger.has-value svg { color: #c9a96e; }
+
+    .loc-panel {
+      display: none;
+      position: absolute;
+      top: calc(100% + 6px);
+      left: 0;
+      z-index: 200;
+      min-width: 200px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      box-shadow: 0 12px 40px rgba(0,0,0,0.5);
+      overflow: hidden;
+      max-height: 320px;
+      overflow-y: auto;
+    }
+    .loc-wrap.open .loc-panel { display: block; }
+
+    .loc-zone {
+      padding: 0.45rem 0.85rem 0.2rem;
+      font-size: 0.67rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      border-top: 1px solid var(--border);
+      cursor: pointer;
+      transition: color 0.15s, background 0.15s;
+    }
+    .loc-zone:first-child { border-top: none; }
+    .loc-zone:hover {
+      color: var(--text-secondary);
+      background: rgba(201,169,110,0.05);
+    }
+    .loc-zone.selected {
+      color: #c9a96e;
+      background: rgba(201,169,110,0.07);
+    }
+    .loc-zone.selected::after {
+      content: ' ✓';
+      font-size: 0.7rem;
+    }
+
+    .loc-option {
+      padding: 0.52rem 0.85rem 0.52rem 1.1rem;
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s;
+    }
+    .loc-option:hover {
+      background: rgba(201,169,110,0.08);
+      color: var(--text-primary);
+    }
+    .loc-option.selected {
+      color: #c9a96e;
+      background: rgba(201,169,110,0.07);
+    }
+    .loc-option.selected::after {
+      content: ' ✓';
+      font-size: 0.75rem;
+    }
+
+    /* scrollbar inside panel */
+    .loc-panel::-webkit-scrollbar { width: 4px; }
+    .loc-panel::-webkit-scrollbar-track { background: transparent; }
+    .loc-panel::-webkit-scrollbar-thumb { background: rgba(201,169,110,0.25); border-radius: 4px; }
+  </style>
+</head>
+<body>
+
+<!-- ── Navigation ── -->
+<nav class="nav">
+  <div class="container nav-inner">
+    <a href="index.html" class="nav-logo">Stellar<span>.</span>Realty</a>
+    <ul class="nav-links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="listings.html" class="active">Listings</a></li>
+      <li><a href="about.html">About</a></li>
+      <li><a href="contact.html">Contact</a></li>
+    </ul>
+    <a href="contact.html" class="btn btn-gold nav-cta">Enquire Now</a>
+    <button class="nav-hamburger" aria-label="Open menu">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</nav>
+
+<!-- ── Page Header ── -->
+<section style="padding:9rem 0 3rem;background:var(--bg-surface);border-bottom:1px solid var(--border);position:relative;overflow:hidden">
+  <div style="position:absolute;inset:0;background-image:linear-gradient(rgba(201,169,110,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(201,169,110,0.03) 1px,transparent 1px);background-size:50px 50px;pointer-events:none"></div>
+  <div class="container" style="position:relative">
+    <span class="label"><span class="accent-line"></span>Hyderabad, India</span>
+    <h1 style="margin-top:0.75rem;margin-bottom:0.5rem;font-size:clamp(2rem,5vw,3.5rem)">All Properties</h1>
+    <p id="result-count" style="font-size:0.9rem;color:var(--text-muted)">Loading…</p>
+  </div>
+</section>
+
+<!-- ── Filters ── -->
+<section style="padding:1.5rem 0;background:var(--bg-base);border-bottom:1px solid var(--border);position:sticky;top:65px;z-index:100;backdrop-filter:blur(12px)">
+  <div class="container">
+    <div style="display:flex;gap:0.75rem;flex-wrap:wrap;align-items:stretch">
+
+      <!-- Search -->
+      <div style="flex:1;min-width:180px;position:relative">
+        <svg style="position:absolute;left:1rem;top:50%;transform:translateY(-50%);color:var(--text-muted);pointer-events:none"
+             width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+        </svg>
+        <input class="form-input" type="text" id="search-input"
+               placeholder="Search locality, project…"
+               style="padding-left:2.5rem" autocomplete="off">
+      </div>
+
+      <!-- Property Type (Apartment, Villa, etc.) -->
+      <select class="form-select" id="filter-type" style="min-width:140px;width:auto">
+        <option value="">Property Type</option>
+        <option value="apartment">Apartment</option>
+        <option value="villa">Villa</option>
+        <option value="plot">Plot</option>
+      </select>
+
+      <!-- Locality — custom dropdown grouped by zone -->
+      <div class="loc-wrap" id="loc-wrap">
+        <button type="button" class="loc-trigger" id="loc-trigger" aria-haspopup="listbox" aria-expanded="false">
+          <span id="loc-label">Any Locality</span>
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+            <polyline points="6 9 12 15 18 9"/>
+          </svg>
+        </button>
+        <div class="loc-panel" id="loc-panel" role="listbox" aria-label="Locality">
+          <div class="loc-option selected" data-value="" role="option">Any Locality</div>
+
+          <div class="loc-zone" data-zone="west">West Hyderabad</div>
+          <div class="loc-option" data-value="Gachibowli"      role="option">Gachibowli</div>
+          <div class="loc-option" data-value="Kondapur"        role="option">Kondapur</div>
+          <div class="loc-option" data-value="Nallagandla"     role="option">Nallagandla</div>
+          <div class="loc-option" data-value="Manikonda"       role="option">Manikonda</div>
+          <div class="loc-option" data-value="Kokapet"         role="option">Kokapet</div>
+          <div class="loc-option" data-value="Puppalaguda"     role="option">Puppalaguda</div>
+          <div class="loc-option" data-value="Financial District" role="option">Financial District</div>
+          <div class="loc-option" data-value="Nanakramguda"    role="option">Nanakramguda</div>
+
+          <div class="loc-zone" data-zone="north">North Hyderabad</div>
+          <div class="loc-option" data-value="Miyapur"         role="option">Miyapur</div>
+          <div class="loc-option" data-value="Bachupally"      role="option">Bachupally</div>
+          <div class="loc-option" data-value="Nizampet"        role="option">Nizampet</div>
+          <div class="loc-option" data-value="Kompally"        role="option">Kompally</div>
+          <div class="loc-option" data-value="Medchal"         role="option">Medchal</div>
+
+          <div class="loc-zone" data-zone="south">South Hyderabad</div>
+          <div class="loc-option" data-value="Shankarpally"    role="option">Shankarpally</div>
+          <div class="loc-option" data-value="Rajendranagar"   role="option">Rajendranagar</div>
+          <div class="loc-option" data-value="Shamshabad"      role="option">Shamshabad</div>
+          <div class="loc-option" data-value="Attapur"         role="option">Attapur</div>
+
+          <div class="loc-zone" data-zone="central">Central / East</div>
+          <div class="loc-option" data-value="Banjara Hills"   role="option">Banjara Hills</div>
+          <div class="loc-option" data-value="Jubilee Hills"   role="option">Jubilee Hills</div>
+          <div class="loc-option" data-value="Somajiguda"      role="option">Somajiguda</div>
+          <div class="loc-option" data-value="Begumpet"        role="option">Begumpet</div>
+          <div class="loc-option" data-value="Himayatnagar"    role="option">Himayatnagar</div>
+          <div class="loc-option" data-value="Secunderabad"    role="option">Secunderabad</div>
+          <div class="loc-option" data-value="Uppal"           role="option">Uppal</div>
+          <div class="loc-option" data-value="LB Nagar"        role="option">LB Nagar</div>
+        </div>
+        <!-- Hidden input so listings.js can read .value like a normal select -->
+        <input type="hidden" id="filter-locality" value="">
+      </div>
+
+      <select class="form-select" id="filter-bhk" style="min-width:110px;width:auto">
+        <option value="">Any BHK</option>
+        <option value="2">2 BHK</option>
+        <option value="3">3 BHK</option>
+        <option value="4">4 BHK</option>
+      </select>
+
+      <select class="form-select" id="filter-budget" style="min-width:160px;width:auto">
+        <option value="">Any Budget</option>
+        <option value="0-7000000">Under ₹70 Lakhs</option>
+        <option value="7000000-15000000">₹70L – ₹1.5 Cr</option>
+        <option value="15000000-50000000">₹1.5 Cr - ₹5 Cr</option>
+        <option value="50000000-9999999999">Above ₹5 Cr</option>
+      </select>
+
+      <select class="form-select" id="filter-sort" style="min-width:150px;width:auto">
+        <option value="newest">Sort: Newest</option>
+        <option value="price-asc">Price: Low → High</option>
+        <option value="price-desc">Price: High → Low</option>
+        <option value="area-desc">Area: Largest First</option>
+      </select>
+
+      <button class="btn btn-outline" onclick="clearFilters()"
+              style="white-space:nowrap;padding:0.75rem 1.1rem;font-size:0.82rem">
+        Clear All
+      </button>
+
+    </div>
+  </div>
+</section>
+
+<!-- ── Main Content ── -->
+<section class="section" style="padding-top:3rem">
+  <div class="container">
+
+    <!-- Badge filters + View toggle -->
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;flex-wrap:wrap;gap:0.75rem">
+      <div class="flex gap-1" style="flex-wrap:wrap" id="badge-filters">
+        <span class="tag active" data-badge="all">All</span>
+        <span class="tag" data-badge="sale">For Sale</span>
+        <span class="tag" data-badge="underconstruction">Under Construction</span>
+        <span class="tag" data-badge="new">New Launch</span>
+        <span class="tag wishlist-tab" data-badge="wishlist" style="display:flex;align-items:center;gap:0.4rem;border-color:rgba(201,169,110,0.25)">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+          </svg>
+          My Wishlist
+          <span class="wl-count" style="display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;border-radius:9px;background:#c9a96e;color:#0d0d0e;font-size:0.65rem;font-weight:700;padding:0 4px;line-height:1"></span>
+        </span>
+      </div>
+      <div class="flex gap-1">
+        <button class="btn btn-outline view-btn active" data-view="grid"
+                style="padding:0.5rem 0.75rem;font-size:0.8rem" title="Grid view">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+            <rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/>
+          </svg>
+        </button>
+        <button class="btn btn-outline view-btn" data-view="list"
+                style="padding:0.5rem 0.75rem;font-size:0.8rem" title="List view">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="3" y1="6" x2="21" y2="6"/>
+            <line x1="3" y1="12" x2="21" y2="12"/>
+            <line x1="3" y1="18" x2="21" y2="18"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Cards grid -->
+    <div class="grid-3" id="listings-grid"></div>
+
+    <!-- Empty state -->
+    <div id="empty-state" style="display:none;text-align:center;padding:5rem 2rem">
+      <div style="font-size:3rem;margin-bottom:1rem">🏠</div>
+      <h3 style="margin-bottom:0.5rem;font-family:var(--font-body);font-weight:400">No properties found</h3>
+      <p style="margin-bottom:1.5rem">Try adjusting your filters or search terms.</p>
+      <button class="btn btn-gold" onclick="clearFilters()">Clear Filters</button>
+    </div>
+
+    <!-- Pagination — injected by listings.js -->
+    <div id="pagination"></div>
+
+  </div>
+</section>
+
+<!-- ── CTA Banner ── -->
+<section style="padding:4rem 0;background:var(--bg-surface);border-top:1px solid var(--border);border-bottom:1px solid var(--border)">
+  <div class="container" style="text-align:center">
+    <span class="label"><span class="accent-line"></span>Can't find what you're looking for?</span>
+    <h2 style="margin-top:0.75rem;margin-bottom:1rem;font-size:2.2rem">Let Us Find It For You</h2>
+    <p style="max-width:480px;margin:0 auto 2rem;color:var(--text-secondary)">
+      Tell us your requirements and our agents will personally curate a shortlist for you.
+    </p>
+    <a href="contact.html" class="btn btn-gold">
+      Send Your Requirements
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+    </a>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════
+     TRUSTED PARTNERS SECTION
+     Paste this block just ABOVE the <footer> tag in:
+       index.html, listings.html, property.html, contact.html
+     ═══════════════════════════════════════════════════════════ -->
+
+<section class="partners-section">
+  <div class="partners-inner">
+ 
+    <div class="partners-header">
+      <span class="partners-line"></span>
+      <span class="partners-label">Trusted Builder Partners</span>
+      <span class="partners-line"></span>
+    </div>
+    <p class="partners-sub">We exclusively represent Hyderabad's most trusted developers</p>
+ 
+    <div class="partners-marquee-wrap" aria-label="Partner logos">
+      <div class="partners-track">
+ 
+        <!-- SET 1 -->
+        <!-- dark card, logo has dark bg -->
+        <div class="partner-logo-card dark-card">
+          <img src="images/partners/vamsiram.svg" alt="Vamsiram Builders" loading="lazy">
+        </div>
+        <!-- dark card, vasavi text is white -->
+        <div class="partner-logo-card dark-card">
+          <img src="images/partners/vasavi.svg" alt="Vasavi Group" loading="lazy">
+        </div>
+        <!-- white card, ramky has white bg -->
+        <div class="partner-logo-card white-card">
+          <img src="images/partners/ramky.png" alt="Ramky Group" loading="lazy">
+        </div>
+        <!-- dark card, prestige has black/gold colors -->
+        <div class="partner-logo-card white-card">
+          <img src="images/partners/prestige.svg" alt="Prestige Group" loading="lazy">
+        </div>
+        <!-- white card, godrej has white bg rect -->
+        <div class="partner-logo-card white-card">
+          <img src="images/partners/godrej.svg" alt="Godrej Properties" loading="lazy">
+        </div>
+        <!-- dark card, brigade has dark bg -->
+        <div class="partner-logo-card dark-card">
+          <img src="images/partners/brigade.png" alt="Brigade Group" loading="lazy">
+        </div>
+        <!-- dark card, aparna is fine on dark -->
+        <div class="partner-logo-card dark-card">
+          <img src="images/partners/aparna.svg" alt="Aparna Constructions" loading="lazy">
+        </div>
+        <!-- white card, rajpushpa has white bg -->
+        <div class="partner-logo-card white-card">
+          <img src="images/partners/rajpushpa.png" alt="Rajpushpa Properties" loading="lazy">
+        </div>
+        <!-- dark card, arka has dark bg -->
+        <div class="partner-logo-card dark-card">
+          <img src="images/partners/arka.png" alt="Arka / Team4" loading="lazy">
+        </div>
+        <!-- dark card, dlf text is white -->
+        <div class="partner-logo-card dark-card">
+          <img src="images/partners/dlf.svg" alt="DLF" loading="lazy">
+        </div>
+        <!-- dark card, casagrand has dark bg -->
+        <div class="partner-logo-card dark-card">
+          <img src="images/partners/casagrand.png" alt="Casagrand" loading="lazy">
+        </div>
+        <!-- dark card, lodha text is white -->
+        <div class="partner-logo-card dark-card">
+          <img src="images/partners/lodha.svg" alt="Lodha" loading="lazy">
+        </div>
+        <!-- dark card, asbl is fine on dark -->
+        <div class="partner-logo-card dark-card">
+          <img src="images/partners/asbl.svg" alt="ASBL" loading="lazy">
+        </div>
+        <!-- dark card, myhome has dark bg -->
+        <div class="partner-logo-card white-card">
+          <img src="images/partners/myhome.png" alt="My Home Group" loading="lazy">
+        </div>
+ 
+        <!-- SET 2 — duplicate for seamless loop -->
+        <div class="partner-logo-card dark-card" aria-hidden="true"><img src="images/partners/vamsiram.svg" alt="" loading="lazy"></div>
+        <div class="partner-logo-card dark-card" aria-hidden="true"><img src="images/partners/vasavi.svg" alt="" loading="lazy"></div>
+        <div class="partner-logo-card white-card" aria-hidden="true"><img src="images/partners/ramky.png" alt="" loading="lazy"></div>
+        <div class="partner-logo-card dark-card" aria-hidden="true"><img src="images/partners/prestige.svg" alt="" loading="lazy"></div>
+        <div class="partner-logo-card white-card" aria-hidden="true"><img src="images/partners/godrej.svg" alt="" loading="lazy"></div>
+        <div class="partner-logo-card dark-card" aria-hidden="true"><img src="images/partners/brigade.png" alt="" loading="lazy"></div>
+        <div class="partner-logo-card dark-card" aria-hidden="true"><img src="images/partners/aparna.svg" alt="" loading="lazy"></div>
+        <div class="partner-logo-card white-card" aria-hidden="true"><img src="images/partners/rajpushpa.png" alt="" loading="lazy"></div>
+        <div class="partner-logo-card dark-card" aria-hidden="true"><img src="images/partners/arka.png" alt="" loading="lazy"></div>
+        <div class="partner-logo-card dark-card" aria-hidden="true"><img src="images/partners/dlf.svg" alt="" loading="lazy"></div>
+        <div class="partner-logo-card dark-card" aria-hidden="true"><img src="images/partners/casagrand.png" alt="" loading="lazy"></div>
+        <div class="partner-logo-card dark-card" aria-hidden="true"><img src="images/partners/lodha.svg" alt="" loading="lazy"></div>
+        <div class="partner-logo-card dark-card" aria-hidden="true"><img src="images/partners/asbl.svg" alt="" loading="lazy"></div>
+        <div class="partner-logo-card dark-card" aria-hidden="true"><img src="images/partners/myhome.png" alt="" loading="lazy"></div>
+ 
+      </div>
+    </div>
+ 
+  </div>
+</section>
+
+<!-- ── Footer ── -->
+<footer class="footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <div style="font-family:var(--font-display);font-size:1.5rem">Stellar<span style="color:var(--gold)">.</span>Realty</div>
+        <p>AI-powered real estate advisory for premium apartments, villas, and investment opportunities in Hyderabad.</p>
+        <div class="flex gap-2 mt-3">
+          <a href="#" class="btn btn-outline" style="padding:0.5rem 0.9rem;font-size:0.78rem">Instagram</a>
+          <a href="#" class="btn btn-outline" style="padding:0.5rem 0.9rem;font-size:0.78rem">LinkedIn</a>
+          <a href="#" class="btn btn-outline" style="padding:0.5rem 0.9rem;font-size:0.78rem">YouTube</a>
+        </div>
+      </div>
+      <div class="footer-col">
+        <h5>Properties</h5>
+        <a href="listings.html">All Listings</a>
+        <a href="listings.html?status=sale">For Sale</a>
+        <a href="listings.html?status=underconstruction">Under Construction</a>
+        <a href="listings.html?badge=new">New Launches</a>
+      </div>
+      <div class="footer-col">
+        <h5>Contact</h5>
+        <a href="tel:+917981343485">+91 79813 43485</a>
+        <a href="mailto:Hello@stellarrealty.in" 
+          onclick="if(!/Mobi|Android/i.test(navigator.userAgent)){ window.open('https://mail.google.com/mail/?view=cm&to=Hello@stellarrealty.co.in','_blank'); return false; }">
+          Hello@stellarrealty.co.in
+        </a>
+        <a href="contact.html">Send a Message</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2026 Stellar Realty. All rights reserved.</span>
+    </div>
+  </div>
+</footer>
+
+<!-- ── Custom locality dropdown logic ── -->
+<script>
+(function () {
+  /* Zone → localities map (mirrors the one in property.js / listings.js) */
+  var ZONE_LOCALITIES = {
+    west:    ['Gachibowli','Kondapur','Nallagandla','Manikonda','Kokapet','Puppalaguda','Financial District','Nanakramguda'],
+    north:   ['Miyapur','Bachupally','Nizampet','Kompally','Medchal'],
+    south:   ['Shankarpally','Rajendranagar','Shamshabad','Attapur'],
+    central: ['Banjara Hills','Jubilee Hills','Somajiguda','Begumpet','Himayatnagar','Secunderabad','Uppal','LB Nagar']
+  };
+
+  document.addEventListener('DOMContentLoaded', function () {
+    var wrap    = document.getElementById('loc-wrap');
+    var trigger = document.getElementById('loc-trigger');
+    var panel   = document.getElementById('loc-panel');
+    var label   = document.getElementById('loc-label');
+    var hidden  = document.getElementById('filter-locality');
+    if (!wrap) return;
+
+    function open()  { wrap.classList.add('open');  trigger.setAttribute('aria-expanded','true');  }
+    function close() { wrap.classList.remove('open'); trigger.setAttribute('aria-expanded','false'); }
+
+    trigger.addEventListener('click', function(e){
+      e.stopPropagation();
+      wrap.classList.contains('open') ? close() : open();
+    });
+
+    document.addEventListener('click', function(e){
+      if (!wrap.contains(e.target)) close();
+    });
+
+    function selectItem(val, text, isZone) {
+      /* val = locality string, or 'zone:west' etc for zone selections */
+      hidden.value = val;
+      /* Store whether this is a zone selection for buildQuery */
+      hidden.dataset.isZone = isZone ? '1' : '';
+
+      label.textContent = val ? text : 'Any Locality';
+      trigger.classList.toggle('has-value', !!val);
+
+      /* Clear all selected states */
+      panel.querySelectorAll('.loc-option, .loc-zone').forEach(function(el){
+        el.classList.remove('selected');
+      });
+
+      close();
+      hidden.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+
+    /* Locality option clicks */
+    panel.addEventListener('click', function(e){
+      /* Zone header click */
+      var zone = e.target.closest('.loc-zone');
+      if (zone && zone.dataset.zone) {
+        var zoneKey  = zone.dataset.zone;
+        var zoneText = zone.textContent.trim();
+        selectItem('zone:' + zoneKey, zoneText, true);
+        zone.classList.add('selected');
+        return;
+      }
+
+      /* Individual locality click */
+      var opt = e.target.closest('.loc-option');
+      if (!opt) return;
+      var val  = opt.dataset.value;
+      var text = opt.textContent.replace(' ✓','').trim();
+      selectItem(val, text, false);
+      opt.classList.add('selected');
+    });
+
+    /* Reset helper called by clearFilters in listings.js */
+    window._resetLocalityDropdown = function() {
+      hidden.value = '';
+      hidden.dataset.isZone = '';
+      label.textContent = 'Any Locality';
+      trigger.classList.remove('has-value');
+      panel.querySelectorAll('.loc-option, .loc-zone').forEach(function(el){
+        el.classList.remove('selected');
+      });
+      var anyOpt = panel.querySelector('.loc-option[data-value=""]');
+      if (anyOpt) anyOpt.classList.add('selected');
+    };
+
+    /* Sync UI if listings.js pre-sets the hidden input from URL params */
+    setTimeout(function(){
+      var v = hidden.value;
+      if (!v) return;
+      if (v.indexOf('zone:') === 0) {
+        var zk = v.replace('zone:','');
+        var zEl = panel.querySelector('.loc-zone[data-zone="' + zk + '"]');
+        if (zEl) { label.textContent = zEl.textContent.trim(); trigger.classList.add('has-value'); zEl.classList.add('selected'); }
+      } else {
+        var opt = panel.querySelector('.loc-option[data-value="' + v.replace(/"/g,'') + '"]');
+        if (opt) { label.textContent = opt.textContent.replace(' ✓','').trim(); trigger.classList.add('has-value'); opt.classList.add('selected'); }
+      }
+    }, 0);
+  });
+
+  /* Expose zone localities so listings.js buildQuery can expand zone values */
+  window._ZONE_LOCALITIES = ZONE_LOCALITIES;
+})();
+</script>
+
+<!-- ── Firebase Phone Auth SDK (loaded before main.js) ── -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="js/firebase-otp.js"></script>
+<!-- listings.js handles all data fetching & rendering -->
+<script src="js/main.js"></script>
+<script src="js/listings.js"></script>
+<script src="js/lead-trigger.js"></script>
+</body>
+</html>

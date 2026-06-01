@@ -1,0 +1,1733 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin — Stellar Realty</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔐</text></svg>">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <style>
+    body { background: var(--bg-base); }
+
+    /* ── Login ── */
+    .admin-login-wrap {
+      min-height: 100vh;
+      display: flex; align-items: center; justify-content: center;
+      padding: 2rem;
+    }
+    .admin-login-card {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 2.5rem;
+      width: 100%; max-width: 420px;
+    }
+    .admin-login-card h2 { margin: 0 0 0.4rem; font-size: 1.6rem; }
+    .admin-login-card p  { margin: 0 0 2rem; color: var(--text-muted); font-size: 0.9rem; }
+
+    /* ── App shell ── */
+    #admin-app { display: none; }
+    .admin-header {
+      background: var(--bg-surface); border-bottom: 1px solid var(--border);
+      padding: 1rem 2rem; display: flex; align-items: center; justify-content: space-between;
+      position: sticky; top: 0; z-index: 200;
+    }
+    .admin-logo { font-family: var(--font-display); font-size: 1.25rem; }
+    .admin-logo span { color: var(--gold); }
+    .admin-body { display: flex; min-height: calc(100vh - 61px); }
+    .admin-sidebar {
+      width: 220px; flex-shrink: 0;
+      background: var(--bg-surface); border-right: 1px solid var(--border);
+      padding: 1.5rem 0;
+    }
+    .sidebar-link {
+      display: flex; align-items: center; gap: 0.65rem;
+      padding: 0.75rem 1.5rem; color: var(--text-secondary); font-size: 0.9rem;
+      cursor: pointer; border: none; border-left: 3px solid transparent;
+      background: none; width: 100%; text-align: left; transition: all 0.2s;
+    }
+    .sidebar-link:hover  { color: var(--text-primary); background: rgba(201,169,110,0.05); }
+    .sidebar-link.active { color: var(--gold); border-left-color: var(--gold); background: rgba(201,169,110,0.06); }
+    .admin-content { flex: 1; padding: 2rem; overflow-y: auto; }
+
+    /* ── Panels ── */
+    .panel { display: none; }
+    .panel.active { display: block; }
+    .panel-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;
+    }
+    .panel-header h2 { margin: 0; font-size: 1.4rem; }
+
+    /* ── Table ── */
+    .admin-table-wrap { overflow-x: auto; }
+    .admin-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+    .admin-table th {
+      text-align: left; padding: 0.65rem 0.85rem;
+      border-bottom: 1px solid var(--border-strong);
+      color: var(--text-muted); font-weight: 500; white-space: nowrap;
+    }
+    .admin-table td {
+      padding: 0.75rem 0.85rem; border-bottom: 1px solid var(--border);
+      color: var(--text-secondary); vertical-align: middle;
+    }
+    .admin-table tr:hover td { background: rgba(201,169,110,0.03); }
+    .admin-table td:first-child { color: var(--text-primary); font-weight: 500; }
+
+    .badge-pill { display: inline-block; padding: 0.2rem 0.6rem; border-radius: 20px; font-size: 0.75rem; font-weight: 500; }
+    .pill-sale      { background: rgba(201,169,110,0.15); color: var(--gold); }
+    .pill-new       { background: rgba(100,220,130,0.12); color: #6edf96; }
+    .pill-type      { background: rgba(150,130,255,0.12); color: #b8aaff; }
+    .pill-contacted { background: rgba(201,169,110,0.12); color: var(--gold); }
+    .pill-converted { background: rgba(100,220,130,0.12); color: #6edf96; }
+
+    .action-btns { display: flex; gap: 0.5rem; }
+    .btn-icon {
+      background: none; border: 1px solid var(--border); border-radius: 6px;
+      padding: 0.35rem 0.6rem; color: var(--text-secondary);
+      cursor: pointer; font-size: 0.78rem; transition: all 0.2s;
+    }
+    .btn-icon:hover     { border-color: var(--gold-dim); color: var(--gold); }
+    .btn-icon.del:hover { border-color: #e05a5a; color: #e05a5a; }
+
+    /* ── Modal overlay ── */
+    .modal-overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,0.72); z-index: 500;
+      align-items: center; justify-content: center; padding: 1rem;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal-box {
+      background: var(--bg-card); border: 1px solid var(--border-strong);
+      border-radius: var(--radius); width: 100%; max-width: 660px;
+      max-height: 92vh; overflow-y: auto; padding: 2rem;
+    }
+    .modal-box h3 { margin: 0 0 1.5rem; font-size: 1.2rem; }
+    .form-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    .form-group { display: flex; flex-direction: column; gap: 0.4rem; }
+    .form-group label { font-size: 0.8rem; color: var(--text-muted); }
+    .form-group.full { grid-column: 1 / -1; }
+    .modal-footer { display: flex; gap: 0.75rem; justify-content: flex-end; margin-top: 1.5rem; }
+
+    /* ── Image widget ── */
+    .img-tabs { display: flex; border-bottom: 1px solid var(--border); margin-bottom: 0.75rem; }
+    .img-tab {
+      padding: 0.45rem 1rem; font-size: 0.8rem; cursor: pointer;
+      border: none; background: none; color: var(--text-muted);
+      border-bottom: 2px solid transparent; transition: all 0.2s; margin-bottom: -1px;
+    }
+    .img-tab.active { color: var(--gold); border-bottom-color: var(--gold); }
+    .img-panel { display: none; }
+    .img-panel.active { display: block; }
+    .img-dropzone {
+      border: 2px dashed var(--border); border-radius: var(--radius-sm);
+      padding: 1.5rem; text-align: center; cursor: pointer;
+      transition: border-color 0.2s; position: relative;
+    }
+    .img-dropzone:hover, .img-dropzone.drag-over { border-color: var(--gold-dim); }
+    .img-dropzone input[type=file] { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+    .img-dropzone p { margin: 0; color: var(--text-muted); font-size: 0.85rem; }
+    .img-preview { margin-top: 0.75rem; display: none; border-radius: var(--radius-sm); overflow: hidden; border: 1px solid var(--border); }
+    .img-preview img { width: 100%; max-height: 160px; object-fit: cover; display: block; }
+
+    /* ── Stats ── */
+    .stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px,1fr)); gap: 1rem; margin-bottom: 2rem; }
+    .stat-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 1.25rem 1.5rem; }
+    .stat-card .stat-label { font-size: 0.78rem; color: var(--text-muted); margin-bottom: 0.35rem; }
+    .stat-card .stat-value { font-size: 1.8rem; font-family: var(--font-display); color: var(--text-primary); }
+
+    /* ── Alerts ── */
+    .alert { padding: 0.75rem 1rem; border-radius: var(--radius-sm); font-size: 0.875rem; margin-bottom: 1rem; }
+    .alert-error   { background: rgba(220,60,60,0.1);  border: 1px solid rgba(220,60,60,0.25);  color: #f08080; }
+    .alert-success { background: rgba(80,200,120,0.1); border: 1px solid rgba(80,200,120,0.25); color: #6edf96; }
+    .alert-warn    { background: rgba(220,160,40,0.1); border: 1px solid rgba(220,160,40,0.25); color: #f0c060; }
+    .empty-state { text-align: center; padding: 4rem 2rem; color: var(--text-muted); font-size: 0.9rem; }
+
+    /* Solid dark inputs inside admin */
+    .modal-box .form-input, .modal-box .form-select, .modal-box .form-textarea,
+    .admin-content .form-input, .admin-content .form-select {
+      background: var(--bg-surface); color: var(--text-primary); color-scheme: dark;
+    }
+    .modal-box .form-select option, .admin-content .form-select option {
+      background: var(--bg-surface); color: var(--text-primary);
+    }
+    .char-hint { font-size: 0.72rem; color: var(--text-muted); text-align: right; margin-top: 0.2rem; }
+
+    /* ── Configuration rows ── */
+    .config-row {
+      display: grid;
+      grid-template-columns: 80px 80px 1fr 1fr 1fr 1fr 36px;
+      gap: 0.5rem;
+      align-items: end;
+      background: var(--bg-base);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 0.65rem 0.75rem;
+    }
+    .config-row label { font-size: 0.7rem; color: var(--text-muted); margin-bottom: 0.25rem; display: block; }
+    .config-row .form-input, .config-row .form-select {
+      font-size: 0.8rem; padding: 0.45rem 0.6rem;
+      background: var(--bg-surface); color: var(--text-primary); color-scheme: dark;
+    }
+    .config-del-btn {
+      background: none; border: 1px solid var(--border); border-radius: 6px;
+      color: var(--text-muted); cursor: pointer; font-size: 0.85rem;
+      padding: 0.45rem 0.5rem; transition: all 0.2s; align-self: end;
+    }
+    .config-del-btn:hover { border-color: #e05a5a; color: #e05a5a; }
+    .config-row-header {
+      display: grid;
+      grid-template-columns: 80px 80px 1fr 1fr 1fr 1fr 36px;
+      gap: 0.5rem;
+      padding: 0 0.75rem;
+      margin-bottom: 0.15rem;
+    }
+    .config-row-header span { font-size: 0.68rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.06em; }
+
+    /* ── Blocked Users panel ── */
+    .pill-blocked    { background: rgba(220,60,60,0.13);  color: #f08080; }
+    .pill-active     { background: rgba(80,200,120,0.11); color: #6edf96; }
+    .pill-preemptive { background: rgba(220,160,40,0.12); color: #f0c060; }
+
+    /* ── Wishlist Drawer ── */
+    .wl-drawer-overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,0.55); z-index: 600;
+    }
+    .wl-drawer-overlay.open { display: block; }
+    .wl-drawer {
+      position: fixed; top: 0; right: 0; bottom: 0;
+      width: 420px; max-width: 96vw;
+      background: var(--bg-card); border-left: 1px solid var(--border-strong);
+      display: flex; flex-direction: column;
+      transform: translateX(100%);
+      transition: transform 0.28s cubic-bezier(0.4,0,0.2,1);
+      z-index: 601;
+    }
+    .wl-drawer-overlay.open .wl-drawer { transform: translateX(0); }
+    .wl-drawer-head {
+      padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between; flex-shrink: 0;
+    }
+    .wl-drawer-head h3 { margin: 0; font-size: 1rem; font-family: var(--font-body); font-weight: 600; }
+    .wl-drawer-head .wl-sub { font-size: 0.75rem; color: var(--text-muted); margin-top: 0.15rem; }
+    .wl-drawer-close {
+      background: none; border: 1px solid var(--border); border-radius: 6px;
+      color: var(--text-secondary); cursor: pointer; padding: 0.3rem 0.6rem; font-size: 0.85rem;
+    }
+    .wl-drawer-close:hover { border-color: var(--gold-dim); color: var(--gold); }
+    .wl-drawer-body { flex: 1; overflow-y: auto; padding: 1rem; }
+    .wl-card {
+      display: flex; gap: 0.85rem; align-items: flex-start;
+      padding: 0.85rem; border: 1px solid var(--border); border-radius: 10px;
+      background: var(--bg-surface); margin-bottom: 0.65rem;
+    }
+    .wl-card img {
+      width: 76px; height: 60px; object-fit: cover;
+      border-radius: 6px; flex-shrink: 0; border: 1px solid var(--border);
+    }
+    .wl-card-info { flex: 1; min-width: 0; }
+    .wl-card-title { font-size: 0.87rem; font-weight: 600; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .wl-card-loc   { font-size: 0.76rem; color: var(--text-muted); margin-top: 0.15rem; }
+    .wl-card-meta  { font-size: 0.78rem; color: var(--gold); margin-top: 0.3rem; font-weight: 500; }
+    .wl-empty { text-align: center; padding: 3rem 1rem; color: var(--text-muted); font-size: 0.875rem; }
+  </style>
+</head>
+<body>
+
+<!-- ════════ LOGIN ════════ -->
+<div id="login-screen" class="admin-login-wrap">
+  <div class="admin-login-card">
+    <div style="font-family:var(--font-display);font-size:1.5rem;margin-bottom:1.5rem">
+      Stellar<span style="color:var(--gold)">.</span>Realty
+    </div>
+    <h2>Admin Login</h2>
+    <p>Restricted area — authorised personnel only.</p>
+    <div id="login-error" class="alert alert-error" style="display:none"></div>
+    <div class="form-group" style="margin-bottom:1rem">
+      <label for="login-user">Username</label>
+      <input class="form-input" type="text" id="login-user"
+             autocomplete="username" placeholder="admin" maxlength="60">
+    </div>
+    <div class="form-group" style="margin-bottom:1.5rem">
+      <label for="login-pass">Password</label>
+      <input class="form-input" type="password" id="login-pass"
+             autocomplete="current-password" placeholder="••••••••" maxlength="128">
+    </div>
+    <button class="btn btn-gold" id="login-btn" style="width:100%">Sign In</button>
+  </div>
+</div>
+
+<!-- ════════ APP ════════ -->
+<div id="admin-app">
+  <header class="admin-header">
+    <div class="admin-logo">Stellar<span>.</span>Realty
+      <span style="font-family:var(--font-body);font-size:0.75rem;color:var(--text-muted);font-weight:400;margin-left:0.5rem">Admin</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:1rem">
+      <a href="index.html" target="_blank" class="btn btn-outline" style="font-size:0.8rem;padding:0.5rem 0.9rem">View Site ↗</a>
+      <button class="btn btn-outline" id="logout-btn" style="font-size:0.8rem;padding:0.5rem 0.9rem">Sign Out</button>
+    </div>
+  </header>
+
+  <div class="admin-body">
+    <nav class="admin-sidebar">
+      <button class="sidebar-link active" data-panel="dashboard">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+        Dashboard
+      </button>
+      <button class="sidebar-link" data-panel="listings">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+        Listings
+      </button>
+      <button class="sidebar-link" data-panel="users">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        Users
+      </button>
+    </nav>
+
+    <main class="admin-content">
+
+      <!-- Dashboard -->
+      <div class="panel active" id="panel-dashboard">
+        <div class="panel-header"><h2>Overview</h2></div>
+        <div class="stats-row">
+          <div class="stat-card"><div class="stat-label">Total Listings</div><div class="stat-value" id="stat-total">—</div></div>
+          <div class="stat-card"><div class="stat-label">For Sale</div><div class="stat-value" id="stat-sale">—</div></div>
+          <div class="stat-card"><div class="stat-label">New Launches</div><div class="stat-value" id="stat-new">—</div></div>
+          <div class="stat-card"><div class="stat-label">Enquiries</div><div class="stat-value" id="stat-contacts">—</div></div>
+        </div>
+        <p style="color:var(--text-muted);font-size:0.875rem">
+          All listings are <strong style="color:var(--text-secondary)">For Sale</strong> only.
+          CRUD operations are strictly UI-triggered: changes only reach the database when you click
+          <em>Save Listing</em> (add/edit) or <em>Delete</em> in the confirm dialog.
+        </p>
+      </div>
+
+      <!-- Listings -->
+      <div class="panel" id="panel-listings">
+        <div class="panel-header">
+          <h2>Listings</h2>
+          <button class="btn btn-gold" id="add-listing-btn" style="font-size:0.85rem;padding:0.6rem 1.1rem">
+            + Add Listing
+          </button>
+        </div>
+        <div id="listings-alert"></div>
+        <div class="admin-table-wrap">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>Title</th><th>Locality</th><th>House Type</th>
+                <th>Configurations</th><th>Price Range</th><th>Badge</th><th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="listings-tbody">
+              <tr><td colspan="7" class="empty-state">Loading…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Users (unified: contacts + OTP users + block management) -->
+      <div class="panel" id="panel-users">
+        <div class="panel-header">
+          <h2>Users</h2>
+          <div style="display:flex;gap:0.75rem;align-items:center;flex-wrap:wrap">
+            <!-- Filter tabs -->
+            <div style="display:flex;gap:0;border:1px solid var(--border);border-radius:var(--radius-sm);overflow:hidden">
+              <button class="users-filter-btn active" data-filter="all"
+                style="padding:0.45rem 0.9rem;font-size:0.8rem;background:rgba(201,169,110,0.08);color:var(--gold);border:none;cursor:pointer;border-right:1px solid var(--border)">All</button>
+              <button class="users-filter-btn" data-filter="enquiry"
+                style="padding:0.45rem 0.9rem;font-size:0.8rem;background:none;color:var(--text-secondary);border:none;cursor:pointer;border-right:1px solid var(--border)">Enquiries</button>
+              <button class="users-filter-btn" data-filter="blocked"
+                style="padding:0.45rem 0.9rem;font-size:0.8rem;background:none;color:var(--text-secondary);border:none;cursor:pointer">Blocked</button>
+            </div>
+            <button class="btn btn-outline" onclick="exportUsersExcel()" style="font-size:0.85rem;padding:0.6rem 1.1rem;display:flex;align-items:center;gap:0.5rem">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              Export
+            </button>
+            <button class="btn btn-gold" id="open-block-modal-btn" style="font-size:0.85rem;padding:0.6rem 1.1rem">+ Block a Number</button>
+          </div>
+        </div>
+        <div id="users-alert"></div>
+        <div class="admin-table-wrap">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>Phone</th>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Enquiries</th>
+                <th>Wishlist</th>
+                <th>OTP Status</th>
+                <th>Last Seen</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="users-tbody">
+              <tr><td colspan="7" class="empty-state">Loading…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<!-- ════════ LISTING MODAL ════════ -->
+<div class="modal-overlay" id="listing-modal">
+  <div class="modal-box">
+    <h3 id="modal-title">Add Listing</h3>
+    <div id="modal-alert" class="alert" style="display:none"></div>
+
+    <div class="form-grid-2">
+
+      <div class="form-group full">
+        <label>Title <span style="color:#e05a5a">*</span></label>
+        <input class="form-input" id="f-title" type="text"
+               placeholder="e.g. Prestige Skyline Tower" maxlength="120"
+               oninput="charCount(this,'f-title-hint',120)">
+        <div class="char-hint" id="f-title-hint">0 / 120</div>
+      </div>
+
+      <div class="form-group">
+        <label>Locality <span style="color:#e05a5a">*</span></label>
+        <input class="form-input" id="f-locality" type="text"
+               placeholder="e.g. Banjara Hills" maxlength="80">
+      </div>
+
+      <div class="form-group">
+        <label>City</label>
+        <input class="form-input" id="f-city" type="text" value="Hyderabad" maxlength="60">
+      </div>
+
+      <div class="form-group">
+        <label>Display Price Override <span style="color:var(--text-muted);font-size:0.72rem">(leave blank to auto-generate from configs)</span></label>
+        <input class="form-input" id="f-price" type="text"
+               placeholder="e.g. ₹68L – ₹95L onwards" maxlength="60">
+      </div>
+
+      <div class="form-group">
+        <label>Price per sq.ft Override <span style="color:var(--text-muted);font-size:0.72rem">(₹ per sq.ft — leave blank to auto-calculate)</span></label>
+        <input class="form-input" id="f-price-per-sqft" type="number" min="0"
+               placeholder="e.g. 5800">
+      </div>
+
+      <div class="form-group">
+        <label>Construction Status</label>
+        <select class="form-select" id="f-status">
+          <option value="Ready to Move">Ready to Move</option>
+          <option value="Under Construction">Under Construction</option>
+          <option value="New Launch">New Launch</option>
+          <option value="Pre-Launch">Pre-Launch</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>House Type <span style="color:#e05a5a">*</span></label>
+        <select class="form-select" id="f-house-type">
+          <option value="apartment">Apartment</option>
+          <option value="villa">Villa</option>
+          <option value="penthouse">Penthouse</option>
+          <option value="plot">Plot</option>
+          <option value="farmhouse">Farmhouse</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>Status / Badge</label>
+        <select class="form-select" id="f-badge">
+          <option value="sale">For Sale</option>
+          <option value="underconstruction">Under Construction</option>
+          <option value="new">New Launch</option>
+          <option value="featured">Featured</option>
+          <option value="premium">Premium</option>
+        </select>
+      </div>
+
+      <!-- ── Multi-Configuration (BHK / Baths / Area / Price per unit type) ── -->
+      <div class="form-group full" id="configurations-section">
+        <label style="display:flex;align-items:center;justify-content:space-between">
+          <span>Configurations <span style="color:#e05a5a">*</span> <span style="color:var(--text-muted);font-size:0.72rem;font-weight:400">(Add one row per unit type, e.g. 2BHK, 3BHK)</span></span>
+          <button type="button" id="add-config-btn" class="btn btn-outline" style="padding:0.35rem 0.75rem;font-size:0.78rem;white-space:nowrap">+ Add Config</button>
+        </label>
+        <div id="configs-list" style="display:flex;flex-direction:column;gap:0.6rem;margin-top:0.5rem"></div>
+        <div style="font-size:0.72rem;color:var(--text-muted);margin-top:0.4rem">Price range and area will be shown as "₹68L – ₹95L" and "1180 – 1450 sq.ft" on the listing. If min = max it shows a single value.</div>
+      </div>
+
+      <!-- Image — upload OR URL link -->
+      <div class="form-group full">
+        <label>Property Image <span style="color:#e05a5a">*</span></label>
+        <div class="img-tabs">
+          <button class="img-tab active" data-tab="upload" type="button">⬆ Upload File</button>
+          <button class="img-tab" data-tab="link" type="button">🔗 Paste URL</button>
+        </div>
+
+        <div class="img-panel active" id="img-panel-upload">
+          <div class="img-dropzone" id="img-dropzone">
+            <input type="file" id="f-img-file" accept="image/jpeg,image/png,image/webp,image/gif">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="1.5" style="margin-bottom:0.5rem"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            <p>Click or drag an image here<br>
+               <span style="font-size:0.75rem">JPEG · PNG · WEBP · GIF · max 5 MB</span></p>
+          </div>
+          <div id="upload-status" style="font-size:0.8rem;color:var(--text-muted);margin-top:0.5rem"></div>
+        </div>
+
+        <div class="img-panel" id="img-panel-link">
+          <input class="form-input" id="f-img-url" type="url"
+                 placeholder="https://images.unsplash.com/photo-…" maxlength="500"
+                 oninput="previewFromUrl(this.value)">
+          <div style="font-size:0.75rem;color:var(--text-muted);margin-top:0.35rem">Paste any public image URL (Unsplash, etc.)</div>
+        </div>
+
+        <div class="img-preview" id="img-preview">
+          <img id="img-preview-el" src="" alt="Preview">
+        </div>
+        <!-- Hidden — carries final URL or data URI into the save handler -->
+        <input type="hidden" id="f-img-final">
+      </div>
+
+      <!-- ── Additional Property Images ── -->
+      <div class="form-group full">
+        <label>Additional Property Images <span style="color:var(--text-muted);font-size:0.72rem">(paste URLs or upload files — these appear in the gallery)</span></label>
+        <div style="display:flex;gap:0.5rem;margin-bottom:0.5rem">
+          <input class="form-input" id="f-extra-img-url" type="url" placeholder="https://…" maxlength="500" style="flex:1">
+          <button type="button" class="btn btn-outline" id="add-extra-img-btn" style="padding:0.5rem 0.85rem;font-size:0.8rem;white-space:nowrap">+ Add URL</button>
+          <label class="btn btn-outline" style="padding:0.5rem 0.85rem;font-size:0.8rem;cursor:pointer;white-space:nowrap">
+            ⬆ Upload<input type="file" id="f-extra-img-file" accept="image/*" style="display:none" multiple>
+          </label>
+        </div>
+        <div id="extra-images-list" style="display:flex;flex-wrap:wrap;gap:0.5rem;min-height:2rem"></div>
+        <div style="font-size:0.72rem;color:var(--text-muted);margin-top:0.3rem">Primary image is always first. These become additional gallery slides.</div>
+      </div>
+
+      <!-- ── Floor Plan Images ── -->
+      <div class="form-group full">
+        <label>Floor Plan Images <span style="color:var(--text-muted);font-size:0.72rem">(URLs or uploads)</span></label>
+        <div style="display:flex;gap:0.5rem;margin-bottom:0.5rem">
+          <input class="form-input" id="f-fp-img-url" type="url" placeholder="https://…" maxlength="500" style="flex:1">
+          <button type="button" class="btn btn-outline" id="add-fp-img-btn" style="padding:0.5rem 0.85rem;font-size:0.8rem;white-space:nowrap">+ Add URL</button>
+          <label class="btn btn-outline" style="padding:0.5rem 0.85rem;font-size:0.8rem;cursor:pointer;white-space:nowrap">
+            ⬆ Upload<input type="file" id="f-fp-img-file" accept="image/*" style="display:none" multiple>
+          </label>
+        </div>
+        <div id="fp-images-list" style="display:flex;flex-wrap:wrap;gap:0.5rem;min-height:2rem"></div>
+      </div>
+
+      <!-- ── Location ── -->
+      <div class="form-group">
+        <label>Latitude <span style="color:var(--text-muted);font-size:0.72rem">(Google Maps)</span></label>
+        <input class="form-input" id="f-locationLat" type="number" step="any" placeholder="e.g. 17.4126" min="-90" max="90">
+      </div>
+      <div class="form-group">
+        <label>Longitude <span style="color:var(--text-muted);font-size:0.72rem">(Google Maps)</span></label>
+        <input class="form-input" id="f-locationLng" type="number" step="any" placeholder="e.g. 78.4071" min="-180" max="180">
+      </div>
+
+      <!-- ── Brochure ── -->
+      <div class="form-group full">
+        <label>Brochure PDF URL</label>
+        <input class="form-input" id="f-brochureUrl" type="url" placeholder="https://…/brochure.pdf" maxlength="500">
+        <div style="font-size:0.72rem;color:var(--text-muted);margin-top:0.3rem">A "Download Brochure" button appears on the property page when this is set.</div>
+      </div>
+
+      <div class="form-group">
+        <label>RERA Number</label>
+        <input class="form-input" id="f-rera" type="text" placeholder="TSRERA/PRJ/…" maxlength="50">
+      </div>
+
+      <div class="form-group">
+        <label>Amenities <span style="color:var(--text-muted);font-size:0.72rem">(comma-separated)</span></label>
+        <input class="form-input" id="f-amenities" type="text" placeholder="Pool, Gym, Parking" maxlength="300">
+      </div>
+
+      <div class="form-group full">
+        <label>Description <span style="color:#e05a5a">*</span></label>
+        <textarea class="form-input form-textarea" id="f-description"
+                  placeholder="Describe the property…" maxlength="1000"
+                  oninput="charCount(this,'f-desc-hint',1000)"></textarea>
+        <div class="char-hint" id="f-desc-hint">0 / 1000</div>
+      </div>
+
+      <div class="form-group">
+        <label style="display:flex;align-items:center;gap:0.5rem;cursor:pointer;font-size:0.85rem">
+          <input type="checkbox" id="f-featured"> Mark as Featured
+        </label>
+      </div>
+
+    </div><!-- /form-grid-2 -->
+
+    <div class="modal-footer">
+      <button class="btn btn-outline" id="modal-cancel" type="button">Cancel</button>
+      <!-- *** This is the ONLY button that triggers CREATE or UPDATE *** -->
+      <button class="btn btn-gold"    id="modal-save"   type="button">Save Listing</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════ DELETE CONFIRM ════════ -->
+<div class="modal-overlay" id="delete-modal">
+  <div class="modal-box" style="max-width:420px">
+    <h3>Delete Listing</h3>
+    <p style="color:var(--text-secondary);margin-bottom:1.5rem">
+      Permanently delete <strong id="delete-name" style="color:var(--text-primary)"></strong>?
+      This cannot be undone.
+    </p>
+    <div class="modal-footer">
+      <button class="btn btn-outline" id="delete-cancel" type="button">Cancel</button>
+      <!-- *** This is the ONLY button that triggers DELETE *** -->
+      <button class="btn" id="delete-confirm" type="button"
+              style="background:#c03030;color:#fff;border:none;border-radius:var(--radius-sm);padding:0.75rem 1.4rem;font-weight:500;cursor:pointer">
+        Delete
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ══════════════════════════════════════════════════════════════
+   LUXE ESTATES — ADMIN DASHBOARD
+   CRUD rules (strictly enforced):
+     CREATE → triggered ONLY by clicking "Save Listing" on Add modal
+     UPDATE → triggered ONLY by clicking "Save Listing" on Edit modal
+     DELETE → triggered ONLY by clicking "Delete" on the confirm dialog
+   Everything else (typing, tab switches, clicking Edit/Delete buttons)
+   is purely local/read-only — zero API calls.
+
+   Duplicate prevention:
+     1. Client-side pre-check against local cache (instant feedback)
+     2. Server enforces unique index on (title + locality) as hard guard
+
+   No rent. Badges: "sale" | "new" only.
+══════════════════════════════════════════════════════════════ */
+
+const API = window.location.origin;
+let adminToken    = sessionStorage.getItem('luxe_admin_token') || '';
+let editingId     = null;    // null = adding; string = editing that ID
+let deletingId    = null;
+let allProperties = [];      // local read-only cache; refreshed after every mutation
+let pendingDataUri = '';      // data URI of picked file; only uploaded on Save
+let extraImages    = [];       // array of {url, isDataUri} for additional property images
+let floorPlanImgs  = [];       // array of {url, isDataUri} for floor plan images
+
+/* ── DOM shorthand ── */
+const $  = id => document.getElementById(id);
+const hd = () => ({ 'Content-Type': 'application/json', 'x-admin-token': adminToken });
+
+function esc(s) {
+  return String(s ?? '')
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function pill(cls, text) { return `<span class="badge-pill pill-${cls}">${esc(text)}</span>`; }
+
+function showAlert(elId, msg, type = 'error') {
+  const el = $(elId); if (!el) return;
+  el.className = `alert alert-${type}`;
+  el.textContent = msg;
+  el.style.display = 'block';
+  if (type !== 'error') setTimeout(() => { el.style.display = 'none'; }, 5000);
+}
+function hideAlert(elId) { const el = $(elId); if (el) el.style.display = 'none'; }
+
+window.charCount = function(el, hintId, max) {
+  const n = el.value.length;
+  const h = $(hintId);
+  if (h) { h.textContent = `${n} / ${max}`; h.style.color = n > max * 0.9 ? '#f0c060' : ''; }
+};
+
+/* ══════════════════════════════════════════════════════════════
+   AUTH
+══════════════════════════════════════════════════════════════ */
+async function tryLogin() {
+  const username = $('login-user').value.trim();
+  const password = $('login-pass').value;
+  if (!username || !password) { showLoginErr('Enter both username and password.'); return; }
+  const btn = $('login-btn'); btn.disabled = true; btn.textContent = 'Signing in…';
+  try {
+    const r = await fetch(`${API}/api/admin/login`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, password })
+    });
+    const d = await r.json();
+    if (d.success) { adminToken = d.token; sessionStorage.setItem('luxe_admin_token', adminToken); enterApp(); }
+    else showLoginErr(d.error || 'Invalid credentials.');
+  } catch { showLoginErr('Network error — is the server running?'); }
+  finally { btn.disabled = false; btn.textContent = 'Sign In'; }
+}
+function showLoginErr(msg) { const e = $('login-error'); e.textContent = msg; e.style.display = 'block'; }
+
+async function checkSession() {
+  if (!adminToken) return;
+  try {
+    const r = await fetch(`${API}/api/admin/verify`, { headers: hd() });
+    if (r.ok) enterApp(); else { adminToken = ''; sessionStorage.removeItem('luxe_admin_token'); }
+  } catch { /* stay on login */ }
+}
+function enterApp() {
+  $('login-screen').style.display = 'none';
+  $('admin-app').style.display    = 'block';
+  loadDashboard(); loadListings();
+}
+$('login-btn').addEventListener('click', tryLogin);
+$('login-pass').addEventListener('keydown', e => { if (e.key === 'Enter') tryLogin(); });
+$('logout-btn').addEventListener('click', async () => {
+  await fetch(`${API}/api/admin/logout`, { method: 'POST', headers: hd() }).catch(() => {});
+  adminToken = ''; sessionStorage.removeItem('luxe_admin_token'); location.reload();
+});
+
+/* ══════════════════════════════════════════════════════════════
+   SIDEBAR
+══════════════════════════════════════════════════════════════ */
+document.querySelectorAll('.sidebar-link').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.sidebar-link').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    $('panel-' + btn.dataset.panel).classList.add('active');
+    if (btn.dataset.panel === 'users') loadUsers();
+  });
+});
+
+/* ══════════════════════════════════════════════════════════════
+   DASHBOARD STATS
+══════════════════════════════════════════════════════════════ */
+async function loadDashboard() {
+  try {
+    const [lR, cR] = await Promise.all([
+      fetch(`${API}/api/properties?limit=1`),
+      fetch(`${API}/api/admin/contacts`, { headers: hd() })
+    ]);
+    const lD = await lR.json(), cD = await cR.json();
+    $('stat-total').textContent    = lD.pagination?.total ?? '—';
+    $('stat-contacts').textContent = cD.contacts?.length  ?? '—';
+    const [sR, nR] = await Promise.all([
+      fetch(`${API}/api/properties?status=sale&limit=1`),
+      fetch(`${API}/api/properties?badge=new&limit=1`)
+    ]);
+    $('stat-sale').textContent = (await sR.json()).pagination?.total ?? '—';
+    $('stat-new').textContent  = (await nR.json()).pagination?.total ?? '—';
+  } catch { /* non-critical */ }
+}
+
+/* ══════════════════════════════════════════════════════════════
+   LISTINGS — READ ONLY (no mutations)
+══════════════════════════════════════════════════════════════ */
+async function loadListings() {
+  const tbody = $('listings-tbody');
+  tbody.innerHTML = `<tr><td colspan="8" class="empty-state">Loading…</td></tr>`;
+  try {
+    const r = await fetch(`${API}/api/properties?limit=100&sort=newest`);
+    const d = await r.json();
+    allProperties = d.properties || [];
+    if (!allProperties.length) {
+      tbody.innerHTML = `<tr><td colspan="7" class="empty-state">No listings yet — click "+ Add Listing" to create one.</td></tr>`;
+      return;
+    }
+    tbody.innerHTML = allProperties.map(p => {
+      // Build configs summary: "2BHK, 3BHK" or legacy "2 BHK"
+      let configSummary;
+      if (p.configurations && p.configurations.length) {
+        configSummary = p.configurations.map(c => `${c.bhk}BHK/${c.baths}B`).join(', ');
+      } else {
+        configSummary = `${p.bhk||'—'} BHK`;
+      }
+      // Price display
+      const priceDisplay = (p.priceMin && p.priceMax && p.priceMin !== p.priceMax)
+        ? esc(p.price) : esc(p.price);
+      return `
+      <tr>
+        <td>${esc(p.title)}</td>
+        <td>${esc(p.locality)}</td>
+        <td>${pill('type', p.type || '—')}</td>
+        <td style="font-size:0.8rem">${esc(configSummary)}</td>
+        <td>${priceDisplay}</td>
+        <td>${pill(p.badge || 'sale', p.badge === 'new' ? 'New Launch' : p.badge || 'Sale')}</td>
+        <td>
+          <div class="action-btns">
+            <button class="btn-icon" data-edit="${p._id}">✎ Edit</button>
+            <button class="btn-icon del" data-del="${p._id}" data-title="${esc(p.title)}">✕ Delete</button>
+          </div>
+        </td>
+      </tr>`}).join('');
+
+    /* Edit click → opens modal (read-only, no API) */
+    tbody.querySelectorAll('[data-edit]').forEach(btn =>
+      btn.addEventListener('click', () => openEditModal(btn.dataset.edit)));
+    /* Delete click → opens confirm dialog (read-only, no API) */
+    tbody.querySelectorAll('[data-del]').forEach(btn =>
+      btn.addEventListener('click', () => openDeleteModal(btn.dataset.del, btn.dataset.title)));
+  } catch {
+    tbody.innerHTML = `<tr><td colspan="7" class="empty-state">Error loading listings.</td></tr>`;
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════
+   IMAGE WIDGET — local only until Save is clicked
+══════════════════════════════════════════════════════════════ */
+document.querySelectorAll('.img-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.img-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.img-panel').forEach(p => p.classList.remove('active'));
+    tab.classList.add('active');
+    $('img-panel-' + tab.dataset.tab).classList.add('active');
+    if (tab.dataset.tab === 'upload') { $('f-img-url').value = ''; }
+    else { $('f-img-file').value = ''; $('upload-status').textContent = ''; pendingDataUri = ''; }
+    if (!editingId) { setFinalImg(''); hidePreview(); }
+  });
+});
+
+const dropzone = $('img-dropzone');
+dropzone.addEventListener('dragover',  e => { e.preventDefault(); dropzone.classList.add('drag-over'); });
+dropzone.addEventListener('dragleave', () => dropzone.classList.remove('drag-over'));
+dropzone.addEventListener('drop', e => {
+  e.preventDefault(); dropzone.classList.remove('drag-over');
+  const f = e.dataTransfer.files[0]; if (f) readFileLocally(f);
+});
+$('f-img-file').addEventListener('change', e => { const f = e.target.files[0]; if (f) readFileLocally(f); });
+
+function readFileLocally(file) {
+  if (!file.type.startsWith('image/'))  { $('upload-status').textContent = '⚠ Only image files allowed.'; return; }
+  if (file.size > 5 * 1024 * 1024)     { $('upload-status').textContent = '⚠ Max file size is 5 MB.'; return; }
+  const reader = new FileReader();
+  reader.onload = ev => {
+    pendingDataUri = ev.target.result;
+    setFinalImg(pendingDataUri);
+    showPreview(pendingDataUri);
+    $('upload-status').textContent = `✓ "${file.name}" ready — will upload when you click Save`;
+  };
+  reader.readAsDataURL(file);
+}
+
+window.previewFromUrl = function(url) {
+  if (!url) { hidePreview(); setFinalImg(''); return; }
+  url = rewriteDriveImageUrl(url);
+  $('f-img-url').value = url;
+  setFinalImg(url); showPreview(url);
+};
+
+function showPreview(src) { $('img-preview-el').src = src; $('img-preview').style.display = 'block'; }
+function hidePreview()    { $('img-preview').style.display = 'none'; $('img-preview-el').src = ''; }
+function setFinalImg(v)   { $('f-img-final').value = v; }
+
+function rewriteDriveUrl(url) {
+  if (!url) return url;
+  // https://drive.google.com/file/d/FILE_ID/view  ->  direct embed
+  const fileMatch = url.match(/drive\.google\.com\/file\/d\/([^/\?]+)/);
+  if (fileMatch) return `https://drive.google.com/uc?export=view&id=${fileMatch[1]}`;
+  // https://drive.google.com/open?id=FILE_ID
+  const openMatch = url.match(/drive\.google\.com\/open\?id=([^&]+)/);
+  if (openMatch) return `https://drive.google.com/uc?export=view&id=${openMatch[1]}`;
+  return url;
+}
+
+/* Convert a Google Drive sharing URL to a thumbnail URL that works as <img src>.
+   The thumbnail API (sz=w1200) bypasses the CORS/redirect issue that
+   blocks drive.google.com/uc?export=view in <img> tags.
+   For non-Drive URLs the original is returned unchanged. */
+function rewriteDriveImageUrl(url) {
+  if (!url) return url;
+  const fileMatch = url.match(/drive\.google\.com\/file\/d\/([A-Za-z0-9_-]+)/);
+  if (fileMatch) return `https://drive.google.com/thumbnail?id=${fileMatch[1]}&sz=w1200`;
+  const openMatch = url.match(/drive\.google\.com\/open\?(?:[^&]*&)*id=([A-Za-z0-9_-]+)/);
+  if (openMatch) return `https://drive.google.com/thumbnail?id=${openMatch[1]}&sz=w1200`;
+  // Already a uc?export=view link — swap to thumbnail
+  const ucMatch = url.match(/drive\.google\.com\/uc\?(?:[^&]*&)*id=([A-Za-z0-9_-]+)/);
+  if (ucMatch) return `https://drive.google.com/thumbnail?id=${ucMatch[1]}&sz=w1200`;
+  return url;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   MODAL OPEN — no API calls here
+══════════════════════════════════════════════════════════════ */
+$('add-listing-btn').addEventListener('click', () => { editingId = null; $('modal-title').textContent = 'Add Listing'; resetForm(); $('listing-modal').classList.add('open'); });
+
+function openEditModal(id) {
+  const p = allProperties.find(x => x._id === id); if (!p) return;
+  editingId = id;
+  $('modal-title').textContent = 'Edit Listing';
+  resetForm();
+
+  $('f-title').value       = p.title       ?? '';
+  $('f-locality').value    = p.locality    ?? '';
+  $('f-city').value        = p.city        ?? 'Hyderabad';
+  $('f-price').value       = p.price       ?? '';
+  $('f-price-per-sqft').value = p.pricePerSqft != null ? p.pricePerSqft : '';
+  $('f-house-type').value  = p.type        ?? 'apartment';
+  // Derive admin badge selector value from schema status + badge
+  let adminBadge = 'sale';
+  if (p.status === 'underconstruction') adminBadge = 'underconstruction';
+  else if (p.badge === 'new')      adminBadge = 'new';
+  else if (p.badge === 'featured') adminBadge = 'featured';
+  else if (p.badge === 'premium')  adminBadge = 'premium';
+  $('f-badge').value = adminBadge;
+  $('f-status').value      = p.constructionStatus ?? 'Ready to Move';
+  $('f-rera').value        = p.rera        ?? '';
+  $('f-amenities').value   = (p.amenities||[]).join(', ');
+  $('f-description').value = p.description ?? '';
+  $('f-featured').checked  = !!p.featured;
+  charCount($('f-title'),'f-title-hint',120);
+  charCount($('f-description'),'f-desc-hint',1000);
+
+  // Populate configurations — migrate legacy single-config if needed
+  if (p.configurations && p.configurations.length) {
+    propertyConfigs = p.configurations.map(c => ({
+      bhk:      c.bhk,
+      baths:    c.baths,
+      areaMin:  c.areaMin,
+      areaMax:  c.areaMax,
+      priceMin: c.priceMin,
+      priceMax: c.priceMax,
+    }));
+  } else {
+    // Migrate from legacy fields
+    propertyConfigs = [{
+      bhk:      p.bhk   || 2,
+      baths:    p.baths || 2,
+      areaMin:  p.area  || '',
+      areaMax:  p.area  || '',
+      priceMin: p.priceRaw || '',
+      priceMax: p.priceRaw || '',
+    }];
+  }
+  renderConfigsList();
+
+  if (p.img) {
+    const imgUrl = rewriteDriveImageUrl(p.img);
+    setFinalImg(imgUrl);
+    if (imgUrl.startsWith('data:')) {
+      document.querySelector('[data-tab="upload"]').click();
+      pendingDataUri = imgUrl;
+      $('upload-status').textContent = '✓ Existing uploaded image';
+    } else {
+      document.querySelector('[data-tab="link"]').click();
+      $('f-img-url').value = imgUrl;
+    }
+    showPreview(imgUrl);
+  }
+
+  // Populate extra images (rewrite any Drive URLs)
+  extraImages = [];
+  (p.images || []).filter(u => u && u !== p.img).forEach(url => {
+    const rewritten = rewriteDriveImageUrl(url);
+    extraImages.push({ url: rewritten, isDataUri: rewritten.startsWith('data:') });
+  });
+  renderExtraImagesList();
+
+  // Populate floor plan images (rewrite any Drive URLs)
+  floorPlanImgs = [];
+  (p.floorPlanImages || []).forEach(url => {
+    const rewritten = rewriteDriveImageUrl(url);
+    floorPlanImgs.push({ url: rewritten, isDataUri: rewritten.startsWith('data:') });
+  });
+  renderFpImagesList();
+
+  // Location
+  $('f-locationLat').value = p.locationLat ?? '';
+  $('f-locationLng').value = p.locationLng ?? '';
+
+  // Brochure
+  $('f-brochureUrl').value = p.brochureUrl ?? '';
+
+  $('listing-modal').classList.add('open');
+}
+
+/* ══════════════════════════════════════════════════════════════
+   MODAL CANCEL — no API call
+══════════════════════════════════════════════════════════════ */
+$('modal-cancel').addEventListener('click', closeListingModal);
+function closeListingModal() { $('listing-modal').classList.remove('open'); editingId = null; }
+
+/* ══════════════════════════════════════════════════════════════
+   ★ SAVE LISTING — THE ONLY ENTRY POINT FOR CREATE / UPDATE API ★
+══════════════════════════════════════════════════════════════ */
+$('modal-save').addEventListener('click', async () => {
+  /* Step 1 — collect & validate locally (no network yet) */
+  const title       = $('f-title').value.trim();
+  const locality    = $('f-locality').value.trim();
+  const city        = $('f-city').value.trim() || 'Hyderabad';
+  const price       = $('f-price').value.trim(); // optional override
+  const pricePerSqft = $('f-price-per-sqft').value.trim(); // optional override
+  const house_type  = $('f-house-type').value;
+  const badge       = $('f-badge').value;
+  const status      = $('f-status').value;
+  const imgFinal    = $('f-img-final').value;
+  const rera        = $('f-rera').value.trim();
+  const description = $('f-description').value.trim();
+  const featured    = $('f-featured').checked;
+  const amenities   = $('f-amenities').value.trim()
+    ? $('f-amenities').value.trim().split(',').map(s => s.trim()).filter(Boolean) : [];
+
+  // Sync configs from DOM before reading
+  syncAllConfigsFromDOM();
+  const configurations = propertyConfigs.map(c => ({
+    bhk:      c.bhk      || 2,
+    baths:    c.baths    || 2,
+    areaMin:  Number(c.areaMin)  || 0,
+    areaMax:  Number(c.areaMax)  || Number(c.areaMin) || 0,
+    priceMin: Number(c.priceMin) || 0,
+    priceMax: Number(c.priceMax) || Number(c.priceMin) || 0,
+  }));
+
+  if (!title)       { showAlert('modal-alert', 'Title is required.'); return; }
+  if (!locality)    { showAlert('modal-alert', 'Locality is required.'); return; }
+  if (!configurations.length) { showAlert('modal-alert', 'Add at least one configuration.'); return; }
+  const badConfig = configurations.find(c => !c.areaMin || !c.priceMin);
+  if (badConfig) { showAlert('modal-alert', `Fill in Area Min and Price Min for all configurations.`); return; }
+  if (!description) { showAlert('modal-alert', 'Description is required.'); return; }
+  if (!imgFinal && !editingId) { showAlert('modal-alert', 'Add an image — upload a file or paste a URL.'); return; }
+  if (imgFinal && !imgFinal.startsWith('data:')) {
+    try { new URL(imgFinal); } catch {
+      showAlert('modal-alert', 'Image URL is not valid — it must start with https://'); return;
+    }
+  }
+
+  /* Step 2 — client-side duplicate pre-check (cache, instant) */
+  const clash = allProperties.find(p =>
+    p._id !== editingId &&
+    p.title.toLowerCase().trim()    === title.toLowerCase() &&
+    p.locality.toLowerCase().trim() === locality.toLowerCase()
+  );
+  if (clash) {
+    showAlert('modal-alert',
+      `A listing called "${title}" in ${locality} already exists. Edit that listing instead, or change the title/locality.`);
+    return;
+  }
+
+  /* Step 3 — if image is a locally picked file, upload it now */
+  let finalImgUrl = imgFinal;
+  if (imgFinal.startsWith('data:')) {
+    $('upload-status').textContent = 'Uploading image to server…';
+    try {
+      const formData = new FormData();
+      formData.append('image', dataUriToBlob(imgFinal), 'property.jpg');
+      const upR = await fetch(`${API}/api/admin/upload`, {
+        method: 'POST', headers: { 'x-admin-token': adminToken }, body: formData
+      });
+      const upD = await upR.json();
+      if (!upD.success) throw new Error(upD.error || 'Upload failed');
+      finalImgUrl = upD.url;
+      $('upload-status').textContent = '✓ Uploaded';
+    } catch (err) {
+      showAlert('modal-alert', `Image upload failed: ${err.message}`); return;
+    }
+  }
+
+  /* Step 4 — build payload and call API (CREATE or UPDATE) */
+  // Collect new fields
+  const locationLat  = $('f-locationLat').value  ? parseFloat($('f-locationLat').value)  : null;
+  const locationLng  = $('f-locationLng').value  ? parseFloat($('f-locationLng').value)  : null;
+  const brochureUrl  = rewriteDriveUrl($('f-brochureUrl').value.trim()) || null;
+
+  // Upload any data-uri extra images
+  const resolvedExtra = [];
+  for (const item of extraImages) {
+    if (item.isDataUri) {
+      try {
+        const fd = new FormData();
+        fd.append('image', dataUriToBlob(item.url), 'extra.jpg');
+        const r = await fetch(`${API}/api/admin/upload`, { method:'POST', headers:{'x-admin-token':adminToken}, body:fd });
+        const d = await r.json();
+        resolvedExtra.push(d.success ? d.url : item.url);
+      } catch { resolvedExtra.push(item.url); }
+    } else { resolvedExtra.push(item.url); }
+  }
+
+  // Upload any data-uri floor plan images
+  const resolvedFp = [];
+  for (const item of floorPlanImgs) {
+    if (item.isDataUri) {
+      try {
+        const fd = new FormData();
+        fd.append('image', dataUriToBlob(item.url), 'fp.jpg');
+        const r = await fetch(`${API}/api/admin/upload`, { method:'POST', headers:{'x-admin-token':adminToken}, body:fd });
+        const d = await r.json();
+        resolvedFp.push(d.success ? d.url : item.url);
+      } catch { resolvedFp.push(item.url); }
+    } else { resolvedFp.push(item.url); }
+  }
+
+  const payload = { title, locality, city, price, house_type, badge, status, img: finalImgUrl, rera, description, featured, amenities,
+    configurations, pricePerSqft: pricePerSqft !== '' ? Number(pricePerSqft) : '',
+    images: resolvedExtra, floorPlanImages: resolvedFp, locationLat, locationLng, brochureUrl };
+
+  const btn = $('modal-save');
+  btn.disabled = true; btn.textContent = 'Saving…';
+  try {
+    const url    = editingId ? `${API}/api/admin/properties/${editingId}` : `${API}/api/admin/properties`;
+    const method = editingId ? 'PUT' : 'POST';
+    const res    = await fetch(url, { method, headers: hd(), body: JSON.stringify(payload) });
+    const data   = await res.json();
+
+    if (data.success) {
+      closeListingModal();
+      showAlert('listings-alert', `"${title}" ${editingId ? 'updated' : 'created'} successfully.`, 'success');
+      await Promise.all([loadListings(), loadDashboard()]);
+    } else {
+      showAlert('modal-alert', data.error || 'Failed to save.', res.status === 409 ? 'warn' : 'error');
+    }
+  } catch { showAlert('modal-alert', 'Network error — please try again.'); }
+  finally { btn.disabled = false; btn.textContent = 'Save Listing'; }
+});
+
+/* ══════════════════════════════════════════════════════════════
+   DELETE — confirm dialog (no API)
+══════════════════════════════════════════════════════════════ */
+function openDeleteModal(id, title) { deletingId = id; $('delete-name').textContent = title; $('delete-modal').classList.add('open'); }
+$('delete-cancel').addEventListener('click', () => { $('delete-modal').classList.remove('open'); deletingId = null; });
+
+/* ★ DELETE CONFIRM — THE ONLY ENTRY POINT FOR DELETE API ★ */
+$('delete-confirm').addEventListener('click', async () => {
+  if (!deletingId) return;
+  const btn = $('delete-confirm'); btn.disabled = true; btn.textContent = 'Deleting…';
+  try {
+    const res  = await fetch(`${API}/api/admin/properties/${deletingId}`, { method: 'DELETE', headers: hd() });
+    const data = await res.json();
+    if (data.success) {
+      $('delete-modal').classList.remove('open'); deletingId = null;
+      showAlert('listings-alert', 'Listing deleted.', 'success');
+      await Promise.all([loadListings(), loadDashboard()]);
+    } else { alert(data.error || 'Failed to delete.'); }
+  } catch { alert('Network error.'); }
+  finally { btn.disabled = false; btn.textContent = 'Delete'; }
+});
+
+/* Backdrop clicks close modals — no API */
+['listing-modal','delete-modal'].forEach(id => {
+  $(id).addEventListener('click', e => {
+    if (e.target !== $(id)) return;
+    $(id).classList.remove('open');
+    if (id === 'listing-modal') editingId = null;
+    if (id === 'delete-modal')  deletingId = null;
+  });
+});
+
+/* ══════════════════════════════════════════════════════════════
+   USERS — unified view (OTP users + contact submissions + block mgmt)
+══════════════════════════════════════════════════════════════ */
+
+/* Show only first 3 chars and last 2 digits — e.g. +91•••••10 */
+function maskPhone(phone) {
+  if (!phone) return '—';
+  return phone;
+}
+
+let _allUsers   = [];   // full dataset from server
+let _userFilter = 'all'; // 'all' | 'enquiry' | 'blocked'
+
+/* Filter tab wiring (delegated — panel may not exist yet at parse time) */
+document.addEventListener('click', e => {
+  const btn = e.target.closest('.users-filter-btn');
+  if (!btn) return;
+  document.querySelectorAll('.users-filter-btn').forEach(b => {
+    b.style.background = 'none';
+    b.style.color      = 'var(--text-secondary)';
+    b.classList.remove('active');
+  });
+  btn.style.background = 'rgba(201,169,110,0.08)';
+  btn.style.color      = 'var(--gold)';
+  btn.classList.add('active');
+  _userFilter = btn.dataset.filter;
+  renderUsers();
+});
+
+async function loadUsers() {
+  const tbody = $('users-tbody');
+  if (!tbody) return;
+  tbody.innerHTML = `<tr><td colspan="8" class="empty-state">Loading…</td></tr>`;
+  try {
+    const r = await fetch(`${API}/api/admin/users`, { headers: hd() });
+    const d = await r.json();
+    if (!d.success) throw new Error(d.error);
+    _allUsers = d.users || [];
+    renderUsers();
+  } catch (err) {
+    tbody.innerHTML = `<tr><td colspan="8" class="empty-state">Error: ${esc(err.message)}</td></tr>`;
+  }
+}
+
+function renderUsers() {
+  const tbody = $('users-tbody');
+  if (!tbody) return;
+
+  let list = _allUsers;
+  if (_userFilter === 'enquiry') list = list.filter(u => u.contacts && u.contacts.length > 0);
+  if (_userFilter === 'blocked') list = list.filter(u => u.blocked);
+
+  if (!list.length) {
+    const msgs = { all: 'No users yet.', enquiry: 'No enquiries yet.', blocked: 'No blocked users.' };
+    tbody.innerHTML = `<tr><td colspan="8" class="empty-state">${msgs[_userFilter]}</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = list.map(u => {
+    const isBlocked    = u.blocked;
+    const isAnonymous  = u.anonymous === true;
+    const isPreemptive = isBlocked && (!u.lastSeenAt || new Date(u.lastSeenAt).getTime() === new Date(u.createdAt).getTime());
+    const otpLabel     = isAnonymous ? 'No OTP' : isBlocked ? (isPreemptive ? 'Pre-emptive' : 'Blocked') : 'Verified';
+    const otpClass     = isAnonymous ? 'type'   : isBlocked ? (isPreemptive ? 'preemptive' : 'blocked') : 'active';
+    const lastSeen     = u.lastSeenAt ? new Date(u.lastSeenAt).toLocaleDateString('en-IN') : '—';
+
+    /* Derive display name + email from most recent contact submission */
+    const latestContact = u.contacts && u.contacts.length ? u.contacts[0] : null;
+    const displayName   = latestContact ? esc(latestContact.name)  : '<span style="color:var(--text-muted)">—</span>';
+    const displayEmail  = latestContact ? esc(latestContact.email) : '<span style="color:var(--text-muted)">—</span>';
+    const enquiryCount  = u.contacts ? u.contacts.length : 0;
+
+    /* Use a stable row key — uuid for verified users, contact _id for anonymous */
+    const rowKey = u.uuid || (latestContact && latestContact._id) || Math.random().toString(36).slice(2);
+
+    /* Enquiry badge — clickable to expand */
+    const enquiryBadge = enquiryCount > 0
+      ? `<button class="btn-icon" style="font-size:0.75rem;padding:0.2rem 0.55rem"
+               onclick="toggleEnquiries('${esc(rowKey)}')">
+           ${enquiryCount} message${enquiryCount > 1 ? 's' : ''} ↓
+         </button>`
+      : `<span style="color:var(--text-muted);font-size:0.8rem">None</span>`;
+
+    /* Block / Unblock button — anonymous rows can only be blocked by phone via the modal */
+    const actionBtn = isAnonymous
+      ? `<span style="color:var(--text-muted);font-size:0.78rem">—</span>`
+      : isBlocked
+        ? `<button class="btn-icon" style="color:#6edf96;border-color:rgba(80,200,120,0.3)"
+                 onclick="unblockUser('${esc(u.uuid)}',this)">✓ Unblock</button>`
+        : `<button class="btn-icon del"
+                 onclick="blockUserByUuid('${esc(u.uuid)}',this)">✕ Block</button>`;
+
+    /* Enquiry rows — hidden by default, toggled inline */
+    const enquiryRows = (u.contacts || []).map(c => `
+      <tr class="enquiry-row enquiry-for-${esc(rowKey)}" style="display:none;background:rgba(201,169,110,0.03)">
+        <td colspan="2" style="padding-left:2rem;font-size:0.78rem;color:var(--text-muted)">
+          ${new Date(c.createdAt).toLocaleDateString('en-IN')}
+        </td>
+        <td colspan="3" style="font-size:0.78rem;color:var(--text-secondary);max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
+          ${esc(c.message)}
+        </td>
+        <td>
+          <select class="form-select" style="padding:0.28rem 0.5rem;font-size:0.75rem;min-width:120px"
+                  onchange="updateContactStatus('${esc(c._id)}',this.value)">
+            <option value="new"       ${c.status==='new'       ?'selected':''}>New</option>
+            <option value="contacted" ${c.status==='contacted' ?'selected':''}>Contacted</option>
+            <option value="converted" ${c.status==='converted' ?'selected':''}>Converted</option>
+          </select>
+        </td>
+        <td></td>
+        <td>
+          <button onclick="openMsgModal('${esc(c._id)}')"
+            style="padding:0.25rem 0.6rem;font-size:0.72rem;border:1px solid var(--border);border-radius:100px;background:none;color:var(--gold);cursor:pointer">View ↗</button>
+        </td>
+      </tr>`).join('');
+
+    /* Wishlist button — only for verified (non-anonymous) users */
+    const wishlistBtn = isAnonymous
+      ? `<span style="color:var(--text-muted);font-size:0.78rem">—</span>`
+      : `<button class="btn-icon" style="font-size:0.75rem;padding:0.2rem 0.55rem"
+               onclick="openWishlistDrawer('${esc(u.uuid)}','${esc(maskPhone(u.phone))}')">
+           ♥ View
+         </button>`;
+
+    return `
+      <tr>
+        <td style="font-family:monospace;font-size:0.85rem;letter-spacing:0.04em">${esc(maskPhone(u.phone))}</td>
+        <td>${displayName}</td>
+        <td style="font-size:0.82rem">${displayEmail}</td>
+        <td>${enquiryBadge}</td>
+        <td>${wishlistBtn}</td>
+        <td><span class="badge-pill pill-${otpClass}">${otpLabel}</span></td>
+        <td style="color:var(--text-muted);font-size:0.8rem">${lastSeen}</td>
+        <td>${actionBtn}</td>
+      </tr>
+      ${enquiryRows}`;
+  }).join('');
+
+  /* Build contacts map for openMsgModal */
+  window._contactsMap = {};
+  _allUsers.forEach(u => {
+    (u.contacts || []).forEach(c => { window._contactsMap[c._id] = c; });
+  });
+}
+
+window.toggleEnquiries = function(rowKey) {
+  const rows = document.querySelectorAll(`.enquiry-for-${rowKey}`);
+  rows.forEach(r => { r.style.display = r.style.display === 'none' ? '' : 'none'; });
+};
+
+window.blockUserByUuid = async function(uuid, btn) {
+  if (!confirm('Block this user? They will be refused on their next OTP attempt.')) return;
+  btn.disabled = true; btn.textContent = '…';
+  try {
+    const r = await fetch(`${API}/api/admin/users/block`, {
+      method: 'POST', headers: hd(), body: JSON.stringify({ uuid })
+    });
+    const d = await r.json();
+    if (d.success) {
+      showAlert('users-alert', 'User blocked.', 'success');
+      loadUsers();
+    } else {
+      showAlert('users-alert', d.error || 'Failed to block.');
+      btn.disabled = false; btn.textContent = '✕ Block';
+    }
+  } catch {
+    showAlert('users-alert', 'Network error.');
+    btn.disabled = false; btn.textContent = '✕ Block';
+  }
+};
+
+window.unblockUser = async function(uuid, btn) {
+  if (!confirm('Unblock this user? They will be able to verify again.')) return;
+  btn.disabled = true; btn.textContent = '…';
+  try {
+    const r = await fetch(`${API}/api/admin/users/unblock`, {
+      method: 'POST', headers: hd(), body: JSON.stringify({ uuid })
+    });
+    const d = await r.json();
+    if (d.success) {
+      showAlert('users-alert', 'User unblocked.', 'success');
+      loadUsers();
+    } else {
+      showAlert('users-alert', d.error || 'Failed to unblock.');
+      btn.disabled = false; btn.textContent = '✓ Unblock';
+    }
+  } catch {
+    showAlert('users-alert', 'Network error.');
+    btn.disabled = false; btn.textContent = '✓ Unblock';
+  }
+};
+
+/* Export users table to Excel */
+window.exportUsersExcel = async function() {
+  if (!_allUsers.length) { alert('No users to export.'); return; }
+
+  /* Fetch all wishlists in one request so we can join to users */
+  let wishlistMap = {};
+  try {
+    const r = await fetch(`${API}/api/admin/wishlists`, { headers: hd() });
+    const d = await r.json();
+    if (d.success) wishlistMap = d.map || {};
+  } catch { /* non-blocking — export still works without wishlist column */ }
+
+  const rows = [];
+  _allUsers.forEach(u => {
+    const savedProps = u.uuid && wishlistMap[u.uuid]
+      ? wishlistMap[u.uuid].join('; ')
+      : '';
+    const base = {
+      'Phone':               u.phone || '',
+      'OTP Status':          u.blocked ? 'Blocked' : (u.anonymous ? 'No OTP' : 'Verified'),
+      'First Seen':          u.createdAt  ? new Date(u.createdAt).toLocaleString('en-IN')  : '',
+      'Last Seen':           u.lastSeenAt ? new Date(u.lastSeenAt).toLocaleString('en-IN') : '',
+      'Wishlisted Properties': savedProps,
+    };
+    if (u.contacts && u.contacts.length) {
+      u.contacts.forEach(c => rows.push({
+        ...base,
+        'Name':           c.name    || '',
+        'Email':          c.email   || '',
+        'Message':        c.message || '',
+        'Enquiry Status': c.status  || '',
+        'Enquiry Date':   c.createdAt ? new Date(c.createdAt).toLocaleString('en-IN') : '',
+      }));
+    } else {
+      rows.push({ ...base, 'Name': '', 'Email': '', 'Message': '', 'Enquiry Status': '', 'Enquiry Date': '' });
+    }
+  });
+
+  const ws = XLSX.utils.json_to_sheet(rows);
+  ws['!cols'] = [
+    {wch:16},{wch:12},{wch:22},{wch:22},{wch:55},
+    {wch:22},{wch:30},{wch:55},{wch:14},{wch:22}
+  ];
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Users');
+  XLSX.writeFile(wb, `stellar-realty-users-${new Date().toISOString().slice(0,10)}.xlsx`);
+};
+
+function openBlockModal() {
+  $('block-phone-input').value = '';
+  hideAlert('block-modal-alert');
+  $('block-modal').style.display = 'flex';
+  setTimeout(() => $('block-phone-input').focus(), 60);
+}
+function closeBlockModal() { $('block-modal').style.display = 'none'; }
+
+document.addEventListener('DOMContentLoaded', () => {
+  $('open-block-modal-btn')?.addEventListener('click', openBlockModal);
+
+  $('block-confirm-btn')?.addEventListener('click', async () => {
+    const phone = $('block-phone-input').value.trim();
+    if (!phone) { showAlert('block-modal-alert', 'Enter a phone number.'); return; }
+    const btn = $('block-confirm-btn');
+    btn.disabled = true; btn.textContent = 'Blocking…';
+    try {
+      const r = await fetch(`${API}/api/admin/users/block`, {
+        method: 'POST', headers: hd(), body: JSON.stringify({ phone })
+      });
+      const d = await r.json();
+      if (d.success) {
+        closeBlockModal();
+        showAlert('users-alert',
+          d.preemptive
+            ? `Pre-emptive block set — they will be refused when they first verify.`
+            : 'User blocked successfully.',
+          'success');
+        loadUsers();
+      } else {
+        showAlert('block-modal-alert', d.error || 'Failed to block.');
+      }
+    } catch { showAlert('block-modal-alert', 'Network error.'); }
+    finally { btn.disabled = false; btn.textContent = 'Block Number'; }
+  });
+
+  $('block-phone-input')?.addEventListener('keydown', e => {
+    if (e.key === 'Enter')  $('block-confirm-btn').click();
+    if (e.key === 'Escape') closeBlockModal();
+  });
+});
+
+/* ══════════════════════════════════════════════════════════════
+   UTILITIES
+══════════════════════════════════════════════════════════════ */
+function resetForm() {
+  ['f-title','f-locality','f-price','f-price-per-sqft',
+   'f-rera','f-amenities','f-description','f-img-url','f-img-final',
+   'f-locationLat','f-locationLng','f-brochureUrl','f-extra-img-url','f-fp-img-url'].forEach(id => { if($(id)) $(id).value = ''; });
+  $('f-city').value       = 'Hyderabad';
+  $('f-house-type').value = 'apartment';
+  $('f-badge').value      = 'sale';
+  $('f-status').value     = 'Ready to Move';
+  $('f-featured').checked = false;
+  $('f-img-file').value   = '';
+  $('upload-status').textContent = '';
+  pendingDataUri = '';
+  extraImages   = [];
+  floorPlanImgs = [];
+  propertyConfigs = [{ bhk: 2, baths: 2, areaMin: '', areaMax: '', priceMin: '', priceMax: '' }];
+  renderConfigsList();
+  renderExtraImagesList();
+  renderFpImagesList();
+  hidePreview();
+  document.querySelectorAll('.img-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.img-panel').forEach(p => p.classList.remove('active'));
+  document.querySelector('[data-tab="upload"]').classList.add('active');
+  $('img-panel-upload').classList.add('active');
+  hideAlert('modal-alert');
+  charCount($('f-title'),'f-title-hint',120);
+  charCount($('f-description'),'f-desc-hint',1000);
+}
+
+/* ══════════════════════════════════════════════════════════════
+   CONFIGURATIONS MANAGEMENT
+══════════════════════════════════════════════════════════════ */
+let propertyConfigs = [{ bhk: 2, baths: 2, areaMin: '', areaMax: '', priceMin: '', priceMax: '' }];
+
+function renderConfigsList() {
+  const container = $('configs-list');
+  if (!container) return;
+
+  if (!propertyConfigs.length) {
+    container.innerHTML = '<div style="font-size:0.8rem;color:var(--text-muted);padding:0.5rem 0">No configurations — click "+ Add Config".</div>';
+    return;
+  }
+
+  // Header row
+  const header = `
+    <div class="config-row-header">
+      <span>BHK</span><span>Baths</span>
+      <span>Area Min (sq.ft)</span><span>Area Max (sq.ft)</span>
+      <span>Price Min (₹)</span><span>Price Max (₹)</span>
+      <span></span>
+    </div>`;
+
+  const rows = propertyConfigs.map((c, i) => `
+    <div class="config-row" data-ci="${i}">
+      <div>
+        <select class="form-select config-bhk" data-ci="${i}">
+          ${[1,2,3,4,5,6].map(n=>`<option value="${n}"${c.bhk==n?' selected':''}>${n} BHK</option>`).join('')}
+        </select>
+      </div>
+      <div>
+        <select class="form-select config-baths" data-ci="${i}">
+          ${[1,2,3,4,5].map(n=>`<option value="${n}"${c.baths==n?' selected':''}>${n}</option>`).join('')}
+        </select>
+      </div>
+      <div>
+        <input class="form-input config-areaMin" data-ci="${i}" type="number" min="0"
+               placeholder="e.g. 1180" value="${c.areaMin||''}">
+      </div>
+      <div>
+        <input class="form-input config-areaMax" data-ci="${i}" type="number" min="0"
+               placeholder="e.g. 1450" value="${c.areaMax||''}">
+      </div>
+      <div>
+        <input class="form-input config-priceMin" data-ci="${i}" type="number" min="0"
+               placeholder="e.g. 6800000" value="${c.priceMin||''}">
+      </div>
+      <div>
+        <input class="form-input config-priceMax" data-ci="${i}" type="number" min="0"
+               placeholder="e.g. 9500000" value="${c.priceMax||''}">
+      </div>
+      <button class="config-del-btn" data-ci="${i}" type="button" title="Remove">✕</button>
+    </div>`).join('');
+
+  container.innerHTML = header + rows;
+
+  // Wire up change handlers
+  container.querySelectorAll('[data-ci]').forEach(el => {
+    const ci = parseInt(el.dataset.ci);
+    el.addEventListener('change', () => syncConfigFromDOM(ci));
+    el.addEventListener('input',  () => syncConfigFromDOM(ci));
+  });
+  container.querySelectorAll('.config-del-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const ci = parseInt(btn.dataset.ci);
+      if (propertyConfigs.length <= 1) { alert('At least one configuration is required.'); return; }
+      propertyConfigs.splice(ci, 1);
+      renderConfigsList();
+    });
+  });
+}
+
+function syncConfigFromDOM(ci) {
+  const row = document.querySelector(`.config-row[data-ci="${ci}"]`);
+  if (!row || !propertyConfigs[ci]) return;
+  propertyConfigs[ci] = {
+    bhk:      parseInt(row.querySelector('.config-bhk').value)   || 2,
+    baths:    parseInt(row.querySelector('.config-baths').value)  || 2,
+    areaMin:  parseFloat(row.querySelector('.config-areaMin').value) || '',
+    areaMax:  parseFloat(row.querySelector('.config-areaMax').value) || '',
+    priceMin: parseFloat(row.querySelector('.config-priceMin').value) || '',
+    priceMax: parseFloat(row.querySelector('.config-priceMax').value) || '',
+  };
+}
+
+function syncAllConfigsFromDOM() {
+  propertyConfigs.forEach((_, i) => syncConfigFromDOM(i));
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  renderConfigsList();
+  $('add-config-btn')?.addEventListener('click', () => {
+    // Clone last config as template
+    const last = propertyConfigs[propertyConfigs.length - 1] || {};
+    propertyConfigs.push({ bhk: last.bhk || 2, baths: last.baths || 2, areaMin: '', areaMax: '', priceMin: '', priceMax: '' });
+    renderConfigsList();
+  });
+});
+
+/* ── Extra images & floor plans helpers ── */
+function renderThumbList(arr, containerId, removeCallback) {
+  const el = $(containerId); if (!el) return;
+  if (!arr.length) { el.innerHTML = '<span style="font-size:0.75rem;color:var(--text-muted);padding:0.25rem 0">No images added yet.</span>'; return; }
+  el.innerHTML = arr.map((item, i) => `
+    <div style="position:relative;display:inline-block;width:72px;height:56px;border-radius:6px;overflow:hidden;border:1px solid var(--border)">
+      <img src="${item.url}" alt="" style="width:100%;height:100%;object-fit:cover">
+      <button onclick="${removeCallback}(${i})" type="button"
+        style="position:absolute;top:2px;right:2px;background:rgba(0,0,0,0.65);border:none;color:#fff;border-radius:4px;width:18px;height:18px;font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1">✕</button>
+    </div>`).join('');
+}
+
+function renderExtraImagesList() { renderThumbList(extraImages, 'extra-images-list', 'removeExtraImage'); }
+function renderFpImagesList()    { renderThumbList(floorPlanImgs, 'fp-images-list', 'removeFpImage'); }
+
+window.removeExtraImage = function(i) { extraImages.splice(i, 1); renderExtraImagesList(); };
+window.removeFpImage    = function(i) { floorPlanImgs.splice(i, 1); renderFpImagesList(); };
+
+function addImageFromUrl(url, arr, renderFn) {
+  try { new URL(url); } catch { alert('Please enter a valid URL.'); return; }
+  url = rewriteDriveImageUrl(url);
+  arr.push({ url, isDataUri: false });
+  renderFn();
+}
+
+function addImagesFromFiles(files, arr, renderFn) {
+  [...files].forEach(file => {
+    if (!file.type.startsWith('image/')) return;
+    if (file.size > 5 * 1024 * 1024) { alert(`${file.name} exceeds 5MB.`); return; }
+    const reader = new FileReader();
+    reader.onload = ev => { arr.push({ url: ev.target.result, isDataUri: true }); renderFn(); };
+    reader.readAsDataURL(file);
+  });
+}
+
+/* Wire up add buttons / file inputs after DOM is ready */
+document.addEventListener('DOMContentLoaded', () => {
+  $('add-extra-img-btn').addEventListener('click', () => {
+    const url = $('f-extra-img-url').value.trim();
+    if (!url) return;
+    addImageFromUrl(url, extraImages, renderExtraImagesList);
+    $('f-extra-img-url').value = '';
+  });
+  $('f-extra-img-file').addEventListener('change', e => {
+    addImagesFromFiles(e.target.files, extraImages, renderExtraImagesList);
+    e.target.value = '';
+  });
+  $('add-fp-img-btn').addEventListener('click', () => {
+    const url = $('f-fp-img-url').value.trim();
+    if (!url) return;
+    addImageFromUrl(url, floorPlanImgs, renderFpImagesList);
+    $('f-fp-img-url').value = '';
+  });
+  $('f-fp-img-file').addEventListener('change', e => {
+    addImagesFromFiles(e.target.files, floorPlanImgs, renderFpImagesList);
+    e.target.value = '';
+  });
+});
+
+function dataUriToBlob(uri) {
+  const [h, b64] = uri.split(',');
+  const mime = h.match(/:(.*?);/)[1];
+  const bytes = atob(b64); const arr = new Uint8Array(bytes.length);
+  for (let i = 0; i < bytes.length; i++) arr[i] = bytes.charCodeAt(i);
+  return new Blob([arr], { type: mime });
+}
+
+/* ══════════════════════════════════════════════════════════════
+   USERS — unified view (OTP users + contact submissions + block mgmt)
+══════════════════════════════════════════════════════════════ */
+
+window.updateContactStatus = async function(id, status) {
+  try {
+    const r = await fetch(`${API}/api/admin/contacts/${id}/status`, { method: 'PATCH', headers: hd(), body: JSON.stringify({ status }) });
+    const d = await r.json();
+    if (!d.success) alert(d.error || 'Failed to update status.');
+  } catch { alert('Network error.'); }
+};
+
+checkSession();
+
+function openMsgModal(id) {
+  const c = window._contactsMap[id];
+  if (!c) return;
+  const meta = [
+    ['Name',  c.name],
+    ['Email', c.email],
+    ['Phone', c.phone || '—'],
+    ['Date',  new Date(c.createdAt).toLocaleString('en-IN')],
+  ];
+  document.getElementById('msg-meta').innerHTML = meta.map(([k,v]) => `
+    <div style="background:var(--bg-base);border:1px solid var(--border);border-radius:8px;padding:0.65rem 0.9rem">
+      <div style="font-size:0.68rem;text-transform:uppercase;letter-spacing:0.09em;color:var(--text-muted);margin-bottom:0.2rem">${k}</div>
+      <div style="font-size:0.88rem;color:var(--text-primary)">${esc(v)}</div>
+    </div>`).join('');
+  document.getElementById('msg-body').textContent = c.message;
+  const modal = document.getElementById('msg-modal');
+  modal.style.display = 'flex';
+  setTimeout(() => modal.querySelector('.modal').style.transform = 'translateY(0)', 10);
+}
+function closeMsgModal() {
+  document.getElementById('msg-modal').style.display = 'none';
+}
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeMsgModal(); });
+
+</script>
+
+<!-- ════════ MESSAGE MODAL ════════ -->
+<div class="modal-overlay" id="msg-modal" style="display:none" onclick="if(event.target===this)closeMsgModal()">
+  <div class="modal" style="max-width:520px;width:90%">
+    <div class="modal-header">
+      <h3 class="modal-title">Customer Message</h3>
+      <button class="modal-close" onclick="closeMsgModal()">✕</button>
+    </div>
+    <div class="modal-body" style="padding:1.5rem">
+      <div id="msg-meta" style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;margin-bottom:1.25rem"></div>
+      <div style="font-size:0.72rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--gold);margin-bottom:0.6rem">Message</div>
+      <div id="msg-body" style="background:var(--bg-base);border:1px solid var(--border);border-radius:8px;padding:1rem;font-size:0.9rem;line-height:1.75;color:var(--text-secondary);white-space:pre-wrap;word-break:break-word;max-height:320px;overflow-y:auto"></div>
+    </div>
+  </div>
+</div>
+<!-- ════════ BLOCK USER MODAL ════════ -->
+<div class="modal-overlay" id="block-modal" style="display:none;align-items:center;justify-content:center"
+     onclick="if(event.target===this)closeBlockModal()">
+  <div class="modal-box" style="max-width:440px">
+    <h3>Block a Phone Number</h3>
+    <p style="color:var(--text-muted);font-size:0.85rem;margin-bottom:1.25rem">
+      Enter the number in international format, e.g.
+      <code style="color:var(--gold);font-size:0.82rem">+91 98765 43210</code>.
+      If the user has never verified before, a pre-emptive block is created.
+    </p>
+    <div id="block-modal-alert" class="alert" style="display:none"></div>
+    <div class="form-group" style="margin-bottom:1.25rem">
+      <label for="block-phone-input">Phone Number</label>
+      <input class="form-input" id="block-phone-input" type="tel"
+             placeholder="+91 98765 43210" maxlength="20" autocomplete="off">
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeBlockModal()" type="button">Cancel</button>
+      <button class="btn" id="block-confirm-btn" type="button"
+              style="background:#c03030;color:#fff;border:none;border-radius:var(--radius-sm);padding:0.75rem 1.4rem;font-weight:500;cursor:pointer">
+        Block Number
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════ WISHLIST DRAWER ════════ -->
+<div class="wl-drawer-overlay" id="wl-drawer-overlay" onclick="if(event.target===this)closeWishlistDrawer()">
+  <div class="wl-drawer">
+    <div class="wl-drawer-head">
+      <div>
+        <h3>Wishlisted Properties</h3>
+        <div class="wl-sub" id="wl-drawer-sub">Loading…</div>
+      </div>
+      <button class="wl-drawer-close" onclick="closeWishlistDrawer()">✕ Close</button>
+    </div>
+    <div class="wl-drawer-body" id="wl-drawer-body">
+      <div class="wl-empty">Loading…</div>
+    </div>
+  </div>
+</div>
+
+<script>
+window.openWishlistDrawer = async function(uuid, maskedPhone) {
+  const overlay = document.getElementById('wl-drawer-overlay');
+  const body    = document.getElementById('wl-drawer-body');
+  const sub     = document.getElementById('wl-drawer-sub');
+
+  sub.textContent  = maskedPhone;
+  body.innerHTML   = '<div class="wl-empty">Loading…</div>';
+  overlay.classList.add('open');
+
+  try {
+    const r = await fetch(`${API}/api/admin/users/${encodeURIComponent(uuid)}/wishlist`, { headers: hd() });
+    const d = await r.json();
+    if (!d.success) throw new Error(d.error || 'Failed to load');
+
+    const props = d.properties || [];
+    sub.textContent = `${maskedPhone} · ${props.length} saved propert${props.length === 1 ? 'y' : 'ies'}`;
+
+    if (!props.length) {
+      body.innerHTML = '<div class="wl-empty">This user has no wishlisted properties.</div>';
+      return;
+    }
+
+    body.innerHTML = props.map(p => {
+      const badge = p.badge
+        ? `<span class="badge-pill pill-${p.badge === 'new' ? 'new' : 'sale'}" style="font-size:0.68rem;margin-left:0.35rem">${p.badge}</span>`
+        : '';
+      const imgSrc = p.img || 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1 1"><rect fill="%23222"/></svg>';
+      return `
+        <div class="wl-card">
+          <img src="${esc(imgSrc)}" alt="${esc(p.title)}" onerror="this.style.opacity='0.3'">
+          <div class="wl-card-info">
+            <div class="wl-card-title">${esc(p.title)}${badge}</div>
+            <div class="wl-card-loc">📍 ${esc(p.locality)} · ${esc(p.type)} · ${p.bhk} BHK</div>
+            <div class="wl-card-meta">${esc(p.price)}</div>
+          </div>
+        </div>`;
+    }).join('');
+
+  } catch (err) {
+    body.innerHTML = `<div class="wl-empty" style="color:#f08080">Error: ${esc(err.message)}</div>`;
+  }
+};
+
+window.closeWishlistDrawer = function() {
+  document.getElementById('wl-drawer-overlay').classList.remove('open');
+};
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeWishlistDrawer();
+});
+</script>
+
+</body>
+</html>
