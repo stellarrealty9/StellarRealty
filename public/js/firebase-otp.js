@@ -34,13 +34,13 @@
      Firebase Console → Project Settings → Your apps → Web app → Config
   ──────────────────────────────────────────────────────────────── */
   const FIREBASE_CONFIG = {
-    apiKey: "AIzaSyCAJd8cOWe0Ve4cZVQNtmgJVaziCayPQXg",
-    authDomain: "stellarrelaty.firebaseapp.com",
-    projectId: "stellarrelaty",
-    storageBucket: "stellarrelaty.firebasestorage.app",
-    messagingSenderId: "194558346304",
-    appId: "1:194558346304:web:bc72191e60981f5bd9cba5",
-    measurementId: "G-MBXZKV77MZ"
+    apiKey: "AIzaSyBw3B2jZpz1SFT-GA0_kZ4Zk9PdMzqEP1Y",
+     authDomain: "stellarrealty-741ea.firebaseapp.com",
+     projectId: "stellarrealty-741ea",
+     storageBucket: "stellarrealty-741ea.firebasestorage.app",
+     messagingSenderId: "197611655748",
+     appId: "1:197611655748:web:8fe0c7ef21aaa004732211",
+     measurementId: "G-JQLMBSQ6G6"
   };
 
   let _app             = null;
