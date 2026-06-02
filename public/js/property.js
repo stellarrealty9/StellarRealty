@@ -586,12 +586,12 @@
                    class="btn btn-gold" style="width:100%;justify-content:center;padding:0.9rem">
                   Enquire About This Property
                 </a>
-                <a href="tel:+919876543210"
+                <a href="tel:+917981343485"
                    class="btn btn-outline" style="width:100%;justify-content:center;padding:0.85rem;margin-top:0.75rem">
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.72 3.36 2 2 0 0 1 3.72 1h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.09a16 16 0 0 0 6 6l1.06-1.06a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/>
                   </svg>
-                  Call +91 98765 43210
+                  Call +91 79813 43485
                 </a>
 
                 ${brochureHTML}
