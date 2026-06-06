@@ -183,6 +183,68 @@
     }
     .config-row-header span { font-size: 0.68rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.06em; }
 
+    /* ── Bulk Upload Panel ── */
+    .bulk-dropzone {
+      border: 2px dashed var(--border); border-radius: var(--radius);
+      padding: 1.75rem; text-align: center; cursor: pointer;
+      transition: border-color 0.2s, background 0.2s; position: relative;
+      background: var(--bg-card);
+    }
+    .bulk-dropzone:hover, .bulk-dropzone.drag-over { border-color: var(--gold-dim); background: rgba(201,169,110,0.03); }
+    .bulk-dropzone input[type=file] { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
+    .bulk-dropzone-icon { font-size: 1.5rem; margin-bottom: 0.5rem; }
+    .bulk-dropzone h3 { margin: 0 0 0.2rem; font-size: 1rem; color: var(--text-primary); }
+    .bulk-dropzone p  { margin: 0; color: var(--text-muted); font-size: 0.82rem; }
+
+    .bulk-template-row {
+      display: flex; align-items: center; justify-content: space-between;
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: var(--radius-sm); padding: 0.85rem 1.1rem;
+      margin-bottom: 0.75rem; flex-wrap: wrap; gap: 0.75rem;
+    }
+    .bulk-template-row p { margin: 0; font-size: 0.82rem; color: var(--text-muted); }
+    .bulk-template-row strong { color: var(--text-primary); }
+
+    .bulk-preview-wrap {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: var(--radius); overflow: hidden; margin-top: 1.5rem;
+    }
+    .bulk-preview-head {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0.9rem 1.1rem; border-bottom: 1px solid var(--border);
+      flex-wrap: wrap; gap: 0.75rem;
+    }
+    .bulk-preview-head h3 { margin: 0; font-size: 0.95rem; }
+    .bulk-stats { display: flex; gap: 0.75rem; font-size: 0.8rem; }
+    .bulk-stat  { padding: 0.25rem 0.6rem; border-radius: 20px; font-weight: 500; }
+    .bulk-stat.ok   { background: rgba(80,200,120,0.12); color: #6edf96; }
+    .bulk-stat.warn { background: rgba(220,160,40,0.12); color: #f0c060; }
+    .bulk-stat.err  { background: rgba(220,60,60,0.12);  color: #f08080; }
+
+    .bulk-preview-table-wrap { overflow-x: auto; max-height: 460px; overflow-y: auto; }
+    .bulk-preview-table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
+    .bulk-preview-table th {
+      text-align: left; padding: 0.55rem 0.75rem;
+      background: var(--bg-surface); border-bottom: 1px solid var(--border-strong);
+      color: var(--text-muted); font-weight: 500; white-space: nowrap;
+      position: sticky; top: 0; z-index: 2;
+    }
+    .bulk-preview-table td { padding: 0.6rem 0.75rem; border-bottom: 1px solid var(--border); color: var(--text-secondary); white-space: nowrap; }
+    .bulk-preview-table td:first-child { color: var(--text-primary); font-weight: 500; }
+    .bulk-preview-table tr.row-ok   td { }
+    .bulk-preview-table tr.row-err  td { background: rgba(220,60,60,0.05); }
+    .bulk-preview-table tr.row-warn td { background: rgba(220,160,40,0.05); }
+    .row-status-ok   { color: #6edf96; font-size: 0.75rem; }
+    .row-status-err  { color: #f08080; font-size: 0.75rem; }
+    .row-status-warn { color: #f0c060; font-size: 0.75rem; }
+
+    .bulk-footer {
+      padding: 0.9rem 1.1rem; border-top: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; flex-wrap: wrap;
+    }
+    .bulk-progress { display: none; font-size: 0.82rem; color: var(--text-muted); }
+    .bulk-progress.visible { display: block; }
+
     /* ── Blocked Users panel ── */
     .pill-blocked    { background: rgba(220,60,60,0.13);  color: #f08080; }
     .pill-active     { background: rgba(80,200,120,0.11); color: #6edf96; }
@@ -279,6 +341,10 @@
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
         Listings
       </button>
+      <button class="sidebar-link" data-panel="bulk">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        Bulk Upload
+      </button>
       <button class="sidebar-link" data-panel="users">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
         Users
@@ -368,6 +434,96 @@
             </tbody>
           </table>
         </div>
+      </div>
+
+      <!-- Bulk Upload -->
+      <div class="panel" id="panel-bulk">
+        <div class="panel-header">
+          <h2>Bulk Upload</h2>
+        </div>
+        <div id="bulk-alert"></div>
+
+        <!-- Template download -->
+        <div class="bulk-template-row">
+          <div>
+            <strong>Download the CSV template</strong>
+            <p>Fill in one property per row. Required columns are marked with ★. Configurations use columns config_1_bhk … config_4_bhk etc. Multiple images can be provided as pipe-separated URLs (e.g. <code style="color:var(--gold);font-size:0.78rem">https://…|https://…</code>). Floor plan images and brochure are optional.</p>
+          </div>
+          <button class="btn btn-outline" id="bulk-dl-template" style="font-size:0.82rem;padding:0.5rem 0.9rem;white-space:nowrap">⬇ Download Template</button>
+        </div>
+
+        <!-- Drop zone -->
+        <div class="bulk-dropzone" id="bulk-dropzone">
+          <input type="file" id="bulk-file-input" accept=".csv,.json">
+          <div class="bulk-dropzone-icon">📂</div>
+          <h3>Drop your CSV or JSON file here</h3>
+          <p>Or click to browse — max 200 properties per upload</p>
+        </div>
+        <div id="bulk-file-status" style="font-size:0.82rem;color:var(--text-muted);margin-top:0.6rem"></div>
+
+        <!-- Preview table (hidden until file loaded) -->
+        <div class="bulk-preview-wrap" id="bulk-preview-wrap" style="display:none">
+          <div class="bulk-preview-head">
+            <h3 id="bulk-preview-title">Preview</h3>
+            <div class="bulk-stats">
+              <span class="bulk-stat ok"  id="bs-ok">0 valid</span>
+              <span class="bulk-stat warn" id="bs-warn" style="display:none">0 warnings</span>
+              <span class="bulk-stat err"  id="bs-err" style="display:none">0 errors</span>
+            </div>
+          </div>
+          <div class="bulk-preview-table-wrap">
+            <table class="bulk-preview-table">
+              <thead>
+                <tr>
+                  <th>#</th><th>Title</th><th>Locality</th><th>City</th>
+                  <th>Type</th><th>Badge</th><th>Configs</th>
+                  <th>Price (auto)</th><th>Images</th><th>Floor Plans</th><th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="bulk-preview-tbody"></tbody>
+            </table>
+          </div>
+          <div class="bulk-footer">
+            <div class="bulk-progress" id="bulk-progress"></div>
+            <div style="display:flex;gap:0.75rem;margin-left:auto">
+              <button class="btn btn-outline" id="bulk-clear-btn" style="font-size:0.85rem">✕ Clear</button>
+              <button class="btn btn-gold"    id="bulk-upload-btn" style="font-size:0.85rem">⬆ Upload Valid Rows</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Column reference -->
+        <details style="margin-top:1.5rem">
+          <summary style="cursor:pointer;font-size:0.85rem;color:var(--text-muted);user-select:none">Column reference ▾</summary>
+          <div style="margin-top:0.75rem;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-sm);overflow:auto">
+            <table class="bulk-preview-table" style="font-size:0.78rem">
+              <thead><tr><th>Column</th><th>Required</th><th>Notes</th></tr></thead>
+              <tbody>
+                <tr><td>title</td><td style="color:#6edf96">★ Yes</td><td>Property name</td></tr>
+                <tr><td>locality</td><td style="color:#6edf96">★ Yes</td><td>Neighbourhood / area</td></tr>
+                <tr><td>city</td><td>No</td><td>Defaults to Hyderabad</td></tr>
+                <tr><td>house_type</td><td style="color:#6edf96">★ Yes</td><td>apartment · villa · penthouse · plot · farmhouse</td></tr>
+                <tr><td>badge</td><td style="color:#6edf96">★ Yes</td><td>sale · new · underconstruction · featured · premium</td></tr>
+                <tr><td>status</td><td>No</td><td>Ready to Move · Under Construction (display string)</td></tr>
+                <tr><td>rera</td><td>No</td><td>RERA registration number</td></tr>
+                <tr><td>description</td><td style="color:#6edf96">★ Yes</td><td>Property description</td></tr>
+                <tr><td>img</td><td style="color:#6edf96">★ Yes</td><td>Primary image URL (https://…)</td></tr>
+                <tr><td>images</td><td>No</td><td>Additional gallery images — pipe-separated URLs e.g. <code>https://…|https://…</code></td></tr>
+                <tr><td>floorPlanImages</td><td>No</td><td>Floor plan images — pipe-separated URLs e.g. <code>https://…|https://…</code></td></tr>
+                <tr><td>amenities</td><td>No</td><td>Comma-separated e.g. "Pool, Gym, Parking"</td></tr>
+                <tr><td>featured</td><td>No</td><td>true or false</td></tr>
+                <tr><td>locationLat / locationLng</td><td>No</td><td>GPS coordinates</td></tr>
+                <tr><td>brochureUrl</td><td>No</td><td>PDF download URL</td></tr>
+                <tr><td>config_1_bhk … config_4_bhk</td><td style="color:#6edf96">★ At least config_1</td><td>Number of bedrooms</td></tr>
+                <tr><td>config_1_baths … config_4_baths</td><td style="color:#6edf96">★</td><td>Number of bathrooms</td></tr>
+                <tr><td>config_1_areaMin … config_4_areaMin</td><td style="color:#6edf96">★</td><td>Area in sq.ft</td></tr>
+                <tr><td>config_1_areaMax … config_4_areaMax</td><td>No</td><td>Leave blank if same as min</td></tr>
+                <tr><td>config_1_priceMin … config_4_priceMin</td><td style="color:#6edf96">★</td><td>Price in ₹ (e.g. 6800000)</td></tr>
+                <tr><td>config_1_priceMax … config_4_priceMax</td><td>No</td><td>Leave blank if same as min</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </details>
       </div>
 
     </main>
@@ -565,7 +721,9 @@
   </div>
 </div>
 
-<!-- ════════ DELETE CONFIRM ════════ -->
+
+
+
 <div class="modal-overlay" id="delete-modal">
   <div class="modal-box" style="max-width:420px">
     <h3>Delete Listing</h3>
@@ -1592,7 +1750,391 @@ window.updateContactStatus = async function(id, status) {
   } catch { alert('Network error.'); }
 };
 
+/* ══════════════════════════════════════════════════════════════
+   BULK UPLOAD
+══════════════════════════════════════════════════════════════ */
+(function() {
+  const CONFIG_COUNT = 4;
+  let bulkRows = []; // parsed + validated rows
+
+  /* ── CSV template columns ── */
+  const BASE_COLS = ['title','locality','city','house_type','badge','status','rera','description','img','images','floorPlanImages','amenities','featured','locationLat','locationLng','brochureUrl','price'];
+  const CONFIG_COLS = [];
+  for (let i = 1; i <= CONFIG_COUNT; i++) {
+    ['bhk','baths','areaMin','areaMax','priceMin','priceMax'].forEach(f => CONFIG_COLS.push(`config_${i}_${f}`));
+  }
+  const ALL_COLS = [...BASE_COLS, ...CONFIG_COLS];
+
+  /* ── Sample row for template ── */
+  const SAMPLE = {
+    title: 'Prestige Skyline Tower', locality: 'Banjara Hills', city: 'Hyderabad',
+    house_type: 'apartment', badge: 'new', status: 'Ready to Move',
+    rera: 'TSRERA/PRJ/2024/001234', description: 'Luxury apartments with panoramic city views.',
+    img: 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=600&q=80',
+    images: 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=600&q=80|https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=600&q=80',
+    floorPlanImages: '',
+    amenities: 'Pool, Gym, Parking', featured: 'false',
+    locationLat: '17.4126', locationLng: '78.4071', brochureUrl: '', price: '',
+    config_1_bhk: '2', config_1_baths: '2', config_1_areaMin: '1180', config_1_areaMax: '1180', config_1_priceMin: '6800000', config_1_priceMax: '7200000',
+    config_2_bhk: '3', config_2_baths: '3', config_2_areaMin: '1600', config_2_areaMax: '1750', config_2_priceMin: '9500000', config_2_priceMax: '11000000',
+    config_3_bhk: '', config_3_baths: '', config_3_areaMin: '', config_3_areaMax: '', config_3_priceMin: '', config_3_priceMax: '',
+    config_4_bhk: '', config_4_baths: '', config_4_areaMin: '', config_4_areaMax: '', config_4_priceMin: '', config_4_priceMax: '',
+  };
+
+  /* ── Download CSV template ── */
+  document.getElementById('bulk-dl-template')?.addEventListener('click', () => {
+    const headerRow = ALL_COLS.join(',');
+    const sampleRow = ALL_COLS.map(col => {
+      const v = String(SAMPLE[col] ?? '');
+      return v.includes(',') ? `"${v}"` : v;
+    }).join(',');
+    const csv = headerRow + '\n' + sampleRow + '\n';
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+    a.download = 'luxe-estates-bulk-template.csv'; a.click();
+  });
+
+  /* ── File input / drag-drop ── */
+  const dropzone = document.getElementById('bulk-dropzone');
+  const fileInput = document.getElementById('bulk-file-input');
+
+  if (dropzone) {
+    dropzone.addEventListener('dragover',  e => { e.preventDefault(); dropzone.classList.add('drag-over'); });
+    dropzone.addEventListener('dragleave', () => dropzone.classList.remove('drag-over'));
+    dropzone.addEventListener('drop', e => {
+      e.preventDefault(); dropzone.classList.remove('drag-over');
+      const f = e.dataTransfer.files[0]; if (f) processFile(f);
+    });
+  }
+  if (fileInput) {
+    fileInput.addEventListener('change', e => { const f = e.target.files[0]; if (f) processFile(f); });
+  }
+
+  document.getElementById('bulk-clear-btn')?.addEventListener('click', clearBulk);
+
+  function clearBulk() {
+    bulkRows = [];
+    fileInput.value = '';
+    document.getElementById('bulk-file-status').textContent = '';
+    document.getElementById('bulk-preview-wrap').style.display = 'none';
+    hideAlert('bulk-alert');
+    dropzone.querySelector('h3').textContent = 'Drop your CSV or JSON file here';
+    dropzone.querySelector('p').textContent = 'Or click to browse — max 200 properties per upload';
+  }
+
+  function processFile(file) {
+    const status = document.getElementById('bulk-file-status');
+    status.textContent = `Reading "${file.name}"…`;
+    const ext = file.name.split('.').pop().toLowerCase();
+    const reader = new FileReader();
+    reader.onload = ev => {
+      try {
+        let raw;
+        if (ext === 'json') {
+          raw = JSON.parse(ev.target.result);
+          if (!Array.isArray(raw)) raw = [raw];
+        } else {
+          raw = parseCSV(ev.target.result);
+        }
+        if (!raw.length) { status.textContent = '⚠ File is empty.'; return; }
+        if (raw.length > 200) { status.textContent = `⚠ Too many rows (${raw.length}). Max 200.`; return; }
+        status.textContent = `✓ "${file.name}" — ${raw.length} row${raw.length !== 1 ? 's' : ''} loaded`;
+        bulkRows = raw.map((r, i) => validateRow(r, i));
+        renderPreview();
+      } catch(err) {
+        status.textContent = `✗ Parse error: ${err.message}`;
+      }
+    };
+    reader.readAsText(file);
+  }
+
+  /* ── Minimal CSV parser (handles quoted fields) ── */
+  function parseCSV(text) {
+    const lines = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n').split('\n').filter(l => l.trim());
+    if (lines.length < 2) return [];
+    const headers = splitCSVLine(lines[0]);
+    return lines.slice(1).map(line => {
+      const vals = splitCSVLine(line);
+      const obj = {};
+      headers.forEach((h, i) => { obj[h.trim()] = (vals[i] ?? '').trim(); });
+      return obj;
+    });
+  }
+
+  function splitCSVLine(line) {
+    const result = []; let cur = ''; let inQ = false;
+    for (let i = 0; i < line.length; i++) {
+      const ch = line[i];
+      if (ch === '"') { inQ = !inQ; }
+      else if (ch === ',' && !inQ) { result.push(cur); cur = ''; }
+      else cur += ch;
+    }
+    result.push(cur);
+    return result;
+  }
+
+  /* ── Row validation ── */
+  const VALID_TYPES  = ['apartment','villa','penthouse','plot','farmhouse','Apartment','Villa','Penthouse','Plot','Farmhouse','Bungalow','Row House','Studio'];
+  const VALID_BADGES = ['sale','new','underconstruction','featured','premium'];
+  const fmtINR = n => n >= 1e7 ? '₹' + (n/1e7).toFixed(2).replace(/\.?0+$/,'') + ' Cr' : '₹' + (n/1e5).toFixed(2).replace(/\.?0+$/,'') + 'L';
+
+  function validateRow(raw, idx) {
+    const errors = [], warnings = [];
+    const r = { _raw: raw, _idx: idx };
+
+    // Required base fields
+    if (!raw.title?.trim())       errors.push('Missing title');
+    if (!raw.locality?.trim())    errors.push('Missing locality');
+    if (!raw.description?.trim()) errors.push('Missing description');
+    if (!raw.img?.trim())         errors.push('Missing img URL');
+    if (!raw.house_type?.trim() || !VALID_TYPES.includes(raw.house_type?.trim()))
+      errors.push(`Invalid house_type "${raw.house_type}" — use: apartment, villa, penthouse, plot, farmhouse`);
+    if (!raw.badge?.trim() || !VALID_BADGES.includes(raw.badge?.trim()))
+      errors.push(`Invalid badge "${raw.badge}" — use: sale, new, underconstruction, featured, premium`);
+
+    // Parse configurations
+    const configurations = [];
+    for (let i = 1; i <= CONFIG_COUNT; i++) {
+      const bhk      = parseInt(raw[`config_${i}_bhk`]);
+      const baths    = parseInt(raw[`config_${i}_baths`]);
+      const areaMin  = parseFloat(raw[`config_${i}_areaMin`]);
+      const priceMin = parseFloat(raw[`config_${i}_priceMin`]);
+      if (!bhk && !areaMin && !priceMin) continue; // empty config slot — skip
+      if (!bhk)      errors.push(`Config ${i}: missing bhk`);
+      if (!baths)    errors.push(`Config ${i}: missing baths`);
+      if (!areaMin)  errors.push(`Config ${i}: missing areaMin`);
+      if (!priceMin) errors.push(`Config ${i}: missing priceMin`);
+      const areaMax  = parseFloat(raw[`config_${i}_areaMax`])  || areaMin;
+      const priceMax = parseFloat(raw[`config_${i}_priceMax`]) || priceMin;
+      configurations.push({ bhk, baths, areaMin, areaMax, priceMin, priceMax });
+    }
+    if (!configurations.length) errors.push('At least one configuration (config_1_bhk, etc.) is required');
+
+    // Derive price preview
+    let pricePreview = raw.price?.trim() || '';
+    if (!pricePreview && configurations.length) {
+      const mn = Math.min(...configurations.map(c => c.priceMin));
+      const mx = Math.max(...configurations.map(c => c.priceMax));
+      pricePreview = mn === mx ? fmtINR(mn) : `${fmtINR(mn)} – ${fmtINR(mx)}`;
+    }
+
+    // Img URL warning (not a hard error — server may accept data URIs)
+    if (raw.img?.trim() && !raw.img.trim().startsWith('http'))
+      warnings.push('img URL should start with https://');
+
+    // Parse pipe-separated additional images (optional)
+    const additionalImages = raw.images?.trim()
+      ? raw.images.trim().split('|').map(u => rewriteDriveImageUrl(u.trim())).filter(Boolean)
+      : [];
+    additionalImages.forEach((u, idx) => {
+      if (!u.startsWith('http')) warnings.push(`images[${idx+1}]: URL should start with https://`);
+    });
+
+    // Parse pipe-separated floor plan images (optional)
+    const floorPlanImages = raw.floorPlanImages?.trim()
+      ? raw.floorPlanImages.trim().split('|').map(u => rewriteDriveImageUrl(u.trim())).filter(Boolean)
+      : [];
+    floorPlanImages.forEach((u, idx) => {
+      if (!u.startsWith('http')) warnings.push(`floorPlanImages[${idx+1}]: URL should start with https://`);
+    });
+
+    r.title         = raw.title?.trim() || `Row ${idx + 1}`;
+    r.locality      = raw.locality?.trim() || '—';
+    r.city          = raw.city?.trim() || 'Hyderabad';
+    r.house_type    = raw.house_type?.trim();
+    r.badge         = raw.badge?.trim();
+    r.configurations = configurations;
+    r.pricePreview  = pricePreview;
+    r.rera          = raw.rera?.trim() || 'N/A';
+    r.additionalImages = additionalImages;
+    r.floorPlanImages  = floorPlanImages;
+    r._errors       = errors;
+    r._warnings     = warnings;
+    r._valid        = errors.length === 0;
+    return r;
+  }
+
+  /* ── Render preview table ── */
+  function renderPreview() {
+    const wrap  = document.getElementById('bulk-preview-wrap');
+    const tbody = document.getElementById('bulk-preview-tbody');
+    const title = document.getElementById('bulk-preview-title');
+    wrap.style.display = 'block';
+
+    const okCount   = bulkRows.filter(r => r._valid).length;
+    const errCount  = bulkRows.filter(r => r._errors.length > 0).length;
+    const warnCount = bulkRows.filter(r => r._warnings.length > 0 && r._valid).length;
+
+    title.textContent = `Preview — ${bulkRows.length} row${bulkRows.length !== 1 ? 's' : ''}`;
+
+    const bsOk   = document.getElementById('bs-ok');
+    const bsWarn = document.getElementById('bs-warn');
+    const bsErr  = document.getElementById('bs-err');
+    bsOk.textContent = `${okCount} valid`;
+    bsWarn.textContent = `${warnCount} warning${warnCount !== 1 ? 's' : ''}`;
+    bsErr.textContent  = `${errCount} error${errCount !== 1 ? 's' : ''}`;
+    bsWarn.style.display = warnCount > 0 ? '' : 'none';
+    bsErr.style.display  = errCount  > 0 ? '' : 'none';
+
+    tbody.innerHTML = bulkRows.map(r => {
+      const rowClass = r._errors.length ? 'row-err' : r._warnings.length ? 'row-warn' : 'row-ok';
+      const configSummary = r.configurations.length
+        ? r.configurations.map(c => `${c.bhk}BHK`).join(', ')
+        : '<span style="color:#f08080">—</span>';
+
+      let statusHtml;
+      if (r._errors.length) {
+        statusHtml = `<span class="row-status-err" title="${esc(r._errors.join('\n'))}">✗ ${r._errors.length} error${r._errors.length > 1 ? 's' : ''}</span>`;
+      } else if (r._warnings.length) {
+        statusHtml = `<span class="row-status-warn" title="${esc(r._warnings.join('\n'))}">⚠ ${r._warnings[0]}</span>`;
+      } else {
+        statusHtml = `<span class="row-status-ok">✓ OK</span>`;
+      }
+
+      return `<tr class="${rowClass}">
+        <td style="color:var(--text-muted)">${r._idx + 1}</td>
+        <td>${esc(r.title)}</td>
+        <td>${esc(r.locality)}</td>
+        <td>${esc(r.city)}</td>
+        <td>${esc(r.house_type || '—')}</td>
+        <td>${esc(r.badge || '—')}</td>
+        <td>${configSummary}</td>
+        <td style="color:var(--gold)">${esc(r.pricePreview || '—')}</td>
+        <td style="font-size:0.75rem;color:var(--text-muted)">${r.additionalImages && r.additionalImages.length ? `+${r.additionalImages.length} extra` : '—'}</td>
+        <td style="font-size:0.75rem;color:var(--text-muted)">${r.floorPlanImages && r.floorPlanImages.length ? `${r.floorPlanImages.length} plan${r.floorPlanImages.length > 1 ? 's' : ''}` : '—'}</td>
+        <td>${statusHtml}</td>
+      </tr>`;
+    }).join('');
+
+    // Update upload button state
+    const uploadBtn = document.getElementById('bulk-upload-btn');
+    uploadBtn.disabled = okCount === 0;
+    uploadBtn.textContent = okCount === bulkRows.length
+      ? `⬆ Upload All ${okCount} Properties`
+      : `⬆ Upload ${okCount} Valid Properties`;
+  }
+
+  /* ── Build a clean server-ready property object from a validated row ── */
+  function buildServerPayload(r) {
+    const raw = r._raw;
+
+    // Parse configurations from flat CSV columns into the array the server expects
+    const configurations = [];
+    for (let i = 1; i <= CONFIG_COUNT; i++) {
+      const bhk      = parseInt(raw[`config_${i}_bhk`]);
+      const baths    = parseInt(raw[`config_${i}_baths`]);
+      const areaMin  = parseFloat(raw[`config_${i}_areaMin`]);
+      const priceMin = parseFloat(raw[`config_${i}_priceMin`]);
+      // Skip completely empty config slots (NaN / blank / zero)
+      if (!bhk && !areaMin && !priceMin) continue;
+      const areaMax  = parseFloat(raw[`config_${i}_areaMax`])  || areaMin;
+      const priceMax = parseFloat(raw[`config_${i}_priceMax`]) || priceMin;
+      configurations.push({ bhk, baths, areaMin, areaMax, priceMin, priceMax });
+    }
+
+    // Parse amenities — CSV stores as comma-separated string
+    const amenities = raw.amenities
+      ? String(raw.amenities).split(',').map(s => s.trim()).filter(Boolean)
+      : [];
+
+    // Parse pipe-separated additional images (optional) — rewrite any Drive URLs
+    const additionalImages = raw.images?.trim()
+      ? raw.images.trim().split('|').map(u => rewriteDriveImageUrl(u.trim())).filter(Boolean)
+      : [];
+
+    // Parse pipe-separated floor plan images (optional) — rewrite any Drive URLs
+    const floorPlanImages = raw.floorPlanImages?.trim()
+      ? raw.floorPlanImages.trim().split('|').map(u => rewriteDriveImageUrl(u.trim())).filter(Boolean)
+      : [];
+
+    // Normalise optional numeric fields (guard against NaN / empty string)
+    const locationLat = parseFloat(raw.locationLat);
+    const locationLng = parseFloat(raw.locationLng);
+
+    return {
+      title:              String(raw.title || '').trim(),
+      locality:           String(raw.locality || '').trim(),
+      city:               String(raw.city || '').trim() || 'Hyderabad',
+      house_type:         String(raw.house_type || '').trim(),
+      badge:              String(raw.badge || '').trim(),
+      status:             String(raw.status || '').trim() || 'Ready to Move',
+      rera:               String(raw.rera  || '').trim() || '',
+      description:        String(raw.description || '').trim(),
+      img:                rewriteDriveImageUrl(String(raw.img || '').trim()),
+      amenities,
+      featured:           String(raw.featured).toLowerCase() === 'true',
+      locationLat:        isFinite(locationLat) ? locationLat : null,
+      locationLng:        isFinite(locationLng) ? locationLng : null,
+      brochureUrl:        raw.brochureUrl && String(raw.brochureUrl).trim() !== ''
+                            ? rewriteDriveUrl(String(raw.brochureUrl).trim())
+                            : null,
+      price:              raw.price && String(raw.price).trim() !== '' ? String(raw.price).trim() : '',
+      configurations,
+      images:             additionalImages,
+      floorPlanImages:    floorPlanImages,
+    };
+  }
+
+  /* ── Upload valid rows ── */
+  document.getElementById('bulk-upload-btn')?.addEventListener('click', async () => {
+    const valid = bulkRows.filter(r => r._valid);
+    if (!valid.length) return;
+
+    const btn      = document.getElementById('bulk-upload-btn');
+    const progress = document.getElementById('bulk-progress');
+    btn.disabled = true; btn.textContent = 'Uploading…';
+    progress.classList.add('visible');
+    hideAlert('bulk-alert');
+
+    // Build properly-shaped payload — configurations[] array, no flat CSV fields
+    const payload = valid.map(r => buildServerPayload(r));
+
+    try {
+      progress.textContent = `Sending ${valid.length} properties to server…`;
+      const res  = await fetch(`${API}/api/admin/properties/bulk`, {
+        method: 'POST', headers: hd(), body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+
+      if (data.success || data.inserted > 0) {
+        const allOk = data.failed === 0 || data.failed == null;
+        const msg = !allOk
+          ? `✓ ${data.inserted} uploaded. ${data.failed} failed (see errors below).`
+          : `✓ All ${data.inserted} properties uploaded successfully!`;
+        showAlert('bulk-alert', msg, !allOk ? 'warn' : 'success');
+
+        // Mark failed rows in preview
+        if (data.details?.failed?.length) {
+          data.details.failed.forEach(f => {
+            const row = bulkRows.find(r => r._idx === f.index);
+            if (row) { row._errors = [f.error]; row._valid = false; }
+          });
+          renderPreview();
+        }
+        await Promise.all([loadListings(), loadDashboard()]);
+        // Reset button on full success
+        if (allOk) {
+          btn.textContent = `⬆ Upload Valid Rows`;
+        } else {
+          btn.textContent = 'Retry Failed Rows';
+        }
+      } else {
+        showAlert('bulk-alert', data.error || 'Upload failed.', 'error');
+        btn.textContent = 'Retry Failed Rows';
+      }
+    } catch (err) {
+      showAlert('bulk-alert', `Network error: ${err.message}`, 'error');
+      btn.textContent = 'Retry Failed Rows';
+    } finally {
+      btn.disabled = false;
+      progress.classList.remove('visible');
+    }
+  });
+
+})(); // end bulk upload IIFE
+
 checkSession();
+
 
 function openMsgModal(id) {
   const c = window._contactsMap[id];
