@@ -514,6 +514,8 @@
                 <tr><td>featured</td><td>No</td><td>true or false</td></tr>
                 <tr><td>locationLat / locationLng</td><td>No</td><td>GPS coordinates</td></tr>
                 <tr><td>brochureUrl</td><td>No</td><td>PDF download URL</td></tr>
+                <tr><td>price</td><td>No</td><td>Display price override e.g. "₹68L – ₹95L" — auto-generated from configs if blank</td></tr>
+                <tr><td>pricePerSqft</td><td>No</td><td>Price per sq.ft override (number e.g. 5800) — auto-calculated if blank</td></tr>
                 <tr><td>config_1_bhk … config_4_bhk</td><td style="color:#6edf96">★ At least config_1</td><td>Number of bedrooms</td></tr>
                 <tr><td>config_1_baths … config_4_baths</td><td style="color:#6edf96">★</td><td>Number of bathrooms</td></tr>
                 <tr><td>config_1_areaMin … config_4_areaMin</td><td style="color:#6edf96">★</td><td>Area in sq.ft</td></tr>
@@ -1758,7 +1760,7 @@ window.updateContactStatus = async function(id, status) {
   let bulkRows = []; // parsed + validated rows
 
   /* ── CSV template columns ── */
-  const BASE_COLS = ['title','locality','city','house_type','badge','status','rera','description','img','images','floorPlanImages','amenities','featured','locationLat','locationLng','brochureUrl','price'];
+  const BASE_COLS = ['title','locality','city','house_type','badge','status','rera','description','img','images','floorPlanImages','amenities','featured','locationLat','locationLng','brochureUrl','price','pricePerSqft'];
   const CONFIG_COLS = [];
   for (let i = 1; i <= CONFIG_COUNT; i++) {
     ['bhk','baths','areaMin','areaMax','priceMin','priceMax'].forEach(f => CONFIG_COLS.push(`config_${i}_${f}`));
@@ -1774,7 +1776,7 @@ window.updateContactStatus = async function(id, status) {
     images: 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=600&q=80|https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=600&q=80',
     floorPlanImages: '',
     amenities: 'Pool, Gym, Parking', featured: 'false',
-    locationLat: '17.4126', locationLng: '78.4071', brochureUrl: '', price: '',
+    locationLat: '17.4126', locationLng: '78.4071', brochureUrl: '', price: '', pricePerSqft: '',
     config_1_bhk: '2', config_1_baths: '2', config_1_areaMin: '1180', config_1_areaMax: '1180', config_1_priceMin: '6800000', config_1_priceMax: '7200000',
     config_2_bhk: '3', config_2_baths: '3', config_2_areaMin: '1600', config_2_areaMax: '1750', config_2_priceMin: '9500000', config_2_priceMax: '11000000',
     config_3_bhk: '', config_3_baths: '', config_3_areaMin: '', config_3_areaMax: '', config_3_priceMin: '', config_3_priceMax: '',
@@ -2069,6 +2071,7 @@ window.updateContactStatus = async function(id, status) {
                             ? rewriteDriveUrl(String(raw.brochureUrl).trim())
                             : null,
       price:              raw.price && String(raw.price).trim() !== '' ? String(raw.price).trim() : '',
+      pricePerSqft:       raw.pricePerSqft && String(raw.pricePerSqft).trim() !== '' ? Number(raw.pricePerSqft) || null : null,
       configurations,
       images:             additionalImages,
       floorPlanImages:    floorPlanImages,
