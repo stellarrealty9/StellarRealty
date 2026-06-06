@@ -54,6 +54,7 @@ if (process.env.NODE_ENV === 'production') {
 }
 
 const app  = express();
+app.set('trust proxy', 1);
 const PORT = process.env.PORT || 5000;
 const IS_PROD = process.env.NODE_ENV === 'production';
 
@@ -98,7 +99,7 @@ const rateLimitStore = new Map();
 
 function rateLimit({ windowMs, max, message }) {
   return (req, res, next) => {
-    const key = req.ip || req.connection.remoteAddress;
+    const key = req.ip;
     const now  = Date.now();
     const rec  = rateLimitStore.get(key) || { count: 0, resetAt: now + windowMs };
 
@@ -579,39 +580,8 @@ app.get('/api/properties/:id/wishlist-count', async (req, res) => {
 });
 
 
-/* Create new property — ADMIN ONLY (use /api/admin/properties) */
-app.post('/api/properties', requireAdmin, async (req, res) => {
-  try {
-    const property = new Property(req.body);
-    await property.save();
-    res.status(201).json({ success: true, property });
-  } catch (err) {
-    res.status(400).json({ success: false, error: err.message });
-  }
-});
 
-/* Update property — ADMIN ONLY */
-app.put('/api/properties/:id', requireAdmin, async (req, res) => {
-  try {
-    req.body.updatedAt = Date.now();
-    const property = await Property.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
-    if (!property) return res.status(404).json({ success: false, error: 'Property not found' });
-    res.json({ success: true, property });
-  } catch (err) {
-    res.status(400).json({ success: false, error: err.message });
-  }
-});
 
-/* Delete property — ADMIN ONLY */
-app.delete('/api/properties/:id', requireAdmin, async (req, res) => {
-  try {
-    const property = await Property.findByIdAndDelete(req.params.id);
-    if (!property) return res.status(404).json({ success: false, error: 'Property not found' });
-    res.json({ success: true, message: 'Property deleted' });
-  } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
-  }
-});
 
 /* ════════════════════════════════════════════════════════════
    CONVERSATION / CHAT ENDPOINTS
@@ -1338,6 +1308,40 @@ app.post('/api/admin/properties', requireAdmin, async (req, res) => {
     const code = err.code === 11000 ? 409 : 400;
     res.status(code).json({ success: false, error: err.message });
   }
+});
+
+/* ── Admin: bulk create properties ── */
+app.post('/api/admin/properties/bulk', requireAdmin, async (req, res) => {
+  const rows = req.body;
+  if (!Array.isArray(rows) || rows.length === 0)
+    return res.status(400).json({ success: false, error: 'Expected a non-empty array of properties' });
+  if (rows.length > 200)
+    return res.status(400).json({ success: false, error: 'Maximum 200 properties per bulk upload' });
+
+  const results = { inserted: [], failed: [] };
+
+  for (let i = 0; i < rows.length; i++) {
+    try {
+      const body = mapAdminToSchema(rows[i]);
+      const property = new Property(body);
+      await property.save();
+      results.inserted.push({ index: i, id: property._id, title: property.title });
+    } catch (err) {
+      const isDupe = err.code === 11000;
+      results.failed.push({
+        index: i,
+        title: rows[i].title || `Row ${i + 1}`,
+        error: isDupe ? `Duplicate: "${rows[i].title}" in ${rows[i].locality} already exists` : err.message
+      });
+    }
+  }
+
+  res.status(results.inserted.length > 0 ? 201 : 400).json({
+    success: results.inserted.length > 0,
+    inserted: results.inserted.length,
+    failed:   results.failed.length,
+    details:  results
+  });
 });
 
 /* ── Admin: update property ── */
